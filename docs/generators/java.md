@@ -33,6 +33,9 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |fullJavaUtil|whether to use fully qualified name for classes under java.util. This option only works for Java API client| |false|
 |gradleProperties|Append additional Gradle proeprties to the gradle.properties file| |null|
 |groupId|groupId in generated pom.xml| |org.openapitools|
+|helidonAsync|Whether a Helidon client should be generated to behave asynchronously| | false|
+|helidonClientType|Which type of client to generate|<dl><dt>**webclient**</dt><dd>Use Helidon's WebClient API</dd>|webclient|
+|helidonVersion|Version of Helidon| |2.3.1|
 |hideGenerationTimestamp|Hides the generation timestamp when files are generated.| |false|
 |ignoreAnyOfInEnum|Ignore anyOf keyword in enum| |false|
 |invokerPackage|root package for generated code| |org.openapitools.client|

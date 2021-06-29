@@ -66,6 +66,10 @@ public class JavaClientCodegen extends AbstractJavaCodegen
     public static final String DYNAMIC_OPERATIONS = "dynamicOperations";
     public static final String SUPPORT_STREAMING = "supportStreaming";
     public static final String GRADLE_PROPERTIES= "gradleProperties";
+    public static final String HELIDON_ASYNC = "helidonAsync";
+    public static final String HELIDON_CLIENT_TYPE = "helidonClientType";
+    public static final String HELIDON_JAVA_VERSION = "helidonJavaVersion";
+    public static final String HELIDON_VERSION = "helidonVersion";
 
     public static final String PLAY_24 = "play24";
     public static final String PLAY_25 = "play25";
@@ -73,6 +77,8 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
     public static final String MICROPROFILE_DEFAULT = "default";
     public static final String MICROPROFILE_KUMULUZEE = "kumuluzee";
+
+    public static final String HELIDON_DEFAULT_VERSION = "2.3.1";
 
     public static final String FEIGN = "feign";
     public static final String GOOGLE_API_CLIENT = "google-api-client";
@@ -89,6 +95,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
     public static final String VERTX = "vertx";
     public static final String MICROPROFILE = "microprofile";
     public static final String APACHE = "apache-httpclient";
+    public static final String HELIDON_CLIENT = "helidon-client";
 
     public static final String SERIALIZATION_LIBRARY_GSON = "gson";
     public static final String SERIALIZATION_LIBRARY_JACKSON = "jackson";
@@ -105,6 +112,10 @@ public class JavaClientCodegen extends AbstractJavaCodegen
     protected String playVersion = PLAY_26;
     protected String microprofileFramework = MICROPROFILE_DEFAULT;
     protected String configKey = null;
+    protected HelidonClientType helidonClientType = HelidonClientType.DEFAULT;
+    protected HelidonJsonType helidonJsonType = HelidonJsonType.DEFAULT;
+    protected String helidonVersion = HELIDON_DEFAULT_VERSION;
+    protected boolean asyncHelidon = false;
 
     protected boolean asyncNative = false;
     protected boolean parcelableModel = false;
@@ -164,6 +175,13 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         cliOptions.add(CliOption.newBoolean(SUPPORT_STREAMING, "Support streaming endpoint (beta)", this.supportStreaming));
         cliOptions.add(CliOption.newString(GRADLE_PROPERTIES, "Append additional Gradle proeprties to the gradle.properties file"));
         cliOptions.add(CliOption.newString(CONFIG_KEY, "Config key in @RegisterRestClient. Default to none. Only `microprofile` supports this option."));
+        CliOption helidonClientTypeOption = new CliOption(HELIDON_CLIENT_TYPE, "Helidon web client type");
+        helidonClientTypeOption.addEnum("webclient", "Helidon WebClient");
+        cliOptions.add(helidonClientTypeOption);
+
+        cliOptions.add(CliOption.newString(HELIDON_VERSION, "Version of Helidon (\"" + HELIDON_DEFAULT_VERSION + "\" (default))"));
+        cliOptions.add(CliOption.newBoolean(HELIDON_ASYNC, "Generate async Helidon WebClient APIs"));
+
 
         supportedLibraries.put(JERSEY1, "HTTP client: Jersey client 1.19.x. JSON processing: Jackson 2.9.x. Enable gzip request encoding using '-DuseGzipFeature=true'. IMPORTANT NOTE: jersey 1.x is no longer actively maintained so please upgrade to 'jersey2' or other HTTP libraries instead.");
         supportedLibraries.put(JERSEY2, "HTTP client: Jersey client 2.25.1. JSON processing: Jackson 2.9.x");
@@ -180,6 +198,9 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         supportedLibraries.put(NATIVE, "HTTP client: Java native HttpClient. JSON processing: Jackson 2.9.x. Only for Java11+");
         supportedLibraries.put(MICROPROFILE, "HTTP client: Microprofile client 1.x. JSON processing: JSON-B");
         supportedLibraries.put(APACHE, "HTTP client: Apache httpclient 4.x");
+        supportedLibraries.put(HELIDON_CLIENT,
+                "HTTP client: Helidon Client 2.x, webclient. JSON processing: Jackson 2.9.x or JSON-B");
+
 
         CliOption libraryOption = new CliOption(CodegenConstants.LIBRARY, "library template (sub-template) to use");
         libraryOption.setEnum(supportedLibraries);
@@ -228,7 +249,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
     @Override
     public void processOpts() {
-        if ((WEBCLIENT.equals(getLibrary()) && "threetenbp".equals(dateLibrary)) || NATIVE.equals(getLibrary())) {
+        if ((WEBCLIENT.equals(getLibrary()) && "threetenbp".equals(dateLibrary)) || NATIVE.equals(getLibrary()) || HELIDON_CLIENT.equals(getLibrary())) {
             dateLibrary = "java8";
         } else if (MICROPROFILE.equals(getLibrary()) && "threetenbp".equals(dateLibrary)) {
             dateLibrary = "legacy";
@@ -288,6 +309,33 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
         if (additionalProperties.containsKey(CONFIG_KEY)) {
             this.setConfigKey(additionalProperties.get(CONFIG_KEY).toString());
+        }
+
+        // Helidon
+        if (HELIDON_CLIENT.equals(getLibrary())) {
+            if (additionalProperties.containsKey(HELIDON_CLIENT_TYPE)) {
+                String helidonClientTypeName = additionalProperties.get(HELIDON_CLIENT_TYPE)
+                        .toString();
+                this.setHelidonClientType(helidonClientTypeName);
+            }
+
+            if (additionalProperties.containsKey(HELIDON_VERSION)) {
+                this.setHelidonVersion(additionalProperties.get(HELIDON_VERSION)
+                        .toString());
+            }
+
+            if (additionalProperties.containsKey(HELIDON_ASYNC)) {
+                this.setHelidonAsync(convertPropertyToBooleanAndWriteBack(HELIDON_ASYNC));
+            }
+
+            // Assign choice-specific boolean tags (e.g., helidonwebclient) for use from templates.
+            additionalProperties.put(helidonClientType.fullClientTypeName(), true);
+            additionalProperties.put(helidonJsonType.fullJsonTypeName(), true);
+
+            String inferredJavaVersion = "11";
+            additionalProperties.put(HELIDON_JAVA_VERSION, inferredJavaVersion);
+            additionalProperties.put(HELIDON_VERSION, helidonVersion);
+
         }
 
         if (additionalProperties.containsKey(ASYNC_NATIVE)) {
@@ -372,12 +420,12 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache", invokerFolder, "JavaTimeFormatter.java"));
         }
 
-        if (!(RESTTEMPLATE.equals(getLibrary()) || isLibrary(REST_ASSURED) || isLibrary(NATIVE) || isLibrary(MICROPROFILE))) {
+        if (!(RESTTEMPLATE.equals(getLibrary()) || isLibrary(REST_ASSURED) || isLibrary(NATIVE) || isLibrary(MICROPROFILE) || isLibrary(HELIDON_CLIENT))) {
             supportingFiles.add(new SupportingFile("StringUtil.mustache", invokerFolder, "StringUtil.java"));
         }
 
         // google-api-client doesn't use the OpenAPI auth, because it uses Google Credential directly (HttpRequestInitializer)
-        if (!(isLibrary(GOOGLE_API_CLIENT) || isLibrary(REST_ASSURED) || isLibrary(NATIVE) || isLibrary(MICROPROFILE))) {
+        if (!(isLibrary(GOOGLE_API_CLIENT) || isLibrary(REST_ASSURED) || isLibrary(NATIVE) || isLibrary(MICROPROFILE) || isLibrary(HELIDON_CLIENT))) {
             supportingFiles.add(new SupportingFile("auth/HttpBasicAuth.mustache", authFolder, "HttpBasicAuth.java"));
             supportingFiles.add(new SupportingFile("auth/HttpBearerAuth.mustache", authFolder, "HttpBearerAuth.java"));
             supportingFiles.add(new SupportingFile("auth/ApiKeyAuth.mustache", authFolder, "ApiKeyAuth.java"));
@@ -416,7 +464,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder, "Pair.java"));
         }
 
-        if (!(FEIGN.equals(getLibrary()) || RESTTEMPLATE.equals(getLibrary()) || RETROFIT_2.equals(getLibrary()) || GOOGLE_API_CLIENT.equals(getLibrary()) || REST_ASSURED.equals(getLibrary()) || NATIVE.equals(getLibrary()) || MICROPROFILE.equals(getLibrary()))) {
+        if (!(FEIGN.equals(getLibrary()) || RESTTEMPLATE.equals(getLibrary()) || RETROFIT_2.equals(getLibrary()) || GOOGLE_API_CLIENT.equals(getLibrary()) || REST_ASSURED.equals(getLibrary()) || NATIVE.equals(getLibrary()) || MICROPROFILE.equals(getLibrary()) || HELIDON_CLIENT.equals(getLibrary()))) {
             supportingFiles.add(new SupportingFile("auth/Authentication.mustache", authFolder, "Authentication.java"));
         }
 
@@ -526,6 +574,24 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         } else if (APACHE.equals(getLibrary())) {
             setJava8ModeAndAdditionalProperties(true);
             forceSerializationLibrary(SERIALIZATION_LIBRARY_JACKSON);
+        } else if (HELIDON_CLIENT.equals(getLibrary())) {
+            List<String> supportedSerializationLibraries = new ArrayList<>();
+            supportedSerializationLibraries.add(SERIALIZATION_LIBRARY_JSONB);
+            supportedSerializationLibraries.add(SERIALIZATION_LIBRARY_JACKSON);
+
+            String helidonDefaultSerializationLibrary = SERIALIZATION_LIBRARY_JSONB;
+
+            supportingFiles.add(new SupportingFile("ApiResponse.mustache", invokerFolder, "ApiResponse.java"));
+            supportingFiles.add(new SupportingFile("AbstractOpenApiSchema.mustache", (sourceFolder + File.separator + modelPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "AbstractOpenApiSchema.java"));
+
+            if (getSerializationLibrary() == null) {
+                LOGGER.info("No serialization library configured, using '" + helidonDefaultSerializationLibrary + "' as " +
+                        "fallback");
+                setSerializationLibrary(helidonDefaultSerializationLibrary);
+            } else if (!supportedSerializationLibraries.contains(getSerializationLibrary())) {
+                LOGGER.error("Unsupported serialization library selected: " + getSerializationLibrary());
+            }
+
         } else {
             LOGGER.error("Unknown library option (-l/--library): {}", getLibrary());
         }
@@ -627,7 +693,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
             // google-api-client doesn't use the OpenAPI auth, because it uses Google Credential directly (HttpRequestInitializer)
             if (!(GOOGLE_API_CLIENT.equals(getLibrary()) || REST_ASSURED.equals(getLibrary()) || usePlayWS
-                    || NATIVE.equals(getLibrary()) || MICROPROFILE.equals(getLibrary()))) {
+                    || NATIVE.equals(getLibrary()) || MICROPROFILE.equals(getLibrary()) || HELIDON_CLIENT.equals(getLibrary()))) {
                 supportingFiles.add(new SupportingFile("auth/OAuth.mustache", authFolder, "OAuth.java"));
                 supportingFiles.add(new SupportingFile("auth/OAuthFlow.mustache", authFolder, "OAuthFlow.java"));
             }
@@ -921,7 +987,7 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             CodegenModel cm = (CodegenModel) mo.get("model");
 
             cm.getVendorExtensions().putIfAbsent("x-implements", new ArrayList<String>());
-            if (JERSEY2.equals(getLibrary()) || NATIVE.equals(getLibrary()) || OKHTTP_GSON_NEXTGEN.equals(getLibrary())) {
+            if (JERSEY2.equals(getLibrary()) || NATIVE.equals(getLibrary()) || OKHTTP_GSON_NEXTGEN.equals(getLibrary()) || HELIDON_CLIENT.equals(getLibrary())) {
                 cm.getVendorExtensions().put("x-implements", new ArrayList<String>());
 
                 if (cm.oneOf != null && !cm.oneOf.isEmpty() && cm.oneOf.contains("ModelNull")) {
@@ -984,6 +1050,18 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
     public void setConfigKey(String configKey) {
         this.configKey = configKey;
+    }
+
+    public void setHelidonClientType(String helidonClientTypeName) {
+        helidonClientType = HelidonClientType.valueOf(helidonClientTypeName.toUpperCase(Locale.ROOT));
+    }
+
+    public void setHelidonVersion(String helidonVersion) {
+        this.helidonVersion = helidonVersion;
+    }
+
+    public void setHelidonAsync(boolean asyncHelidon) {
+        this.asyncHelidon = asyncHelidon;
     }
 
     public void setParcelableModel(boolean parcelableModel) {
@@ -1083,6 +1161,41 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             if (!imports.contains(oneImport)) {
                 imports.add(oneImport);
             }
+        }
+    }
+
+    private enum HelidonClientType {
+        // additional types might be forthcoming
+        WEBCLIENT("webclient");
+
+        private static final HelidonClientType DEFAULT = WEBCLIENT;
+
+        private static final String HELIDON_CLIENT_TYPE_PREFIX = "helidonClientType-";
+        private final String clientTypeName;
+
+        HelidonClientType(String clientTypeName) {
+            this.clientTypeName = clientTypeName;
+        }
+
+        String fullClientTypeName() {
+            return HELIDON_CLIENT_TYPE_PREFIX + clientTypeName;
+        }
+    };
+
+    private enum HelidonJsonType {
+        JSON_P("jsonp"), JACKSON("jackson"), JSON_B("jsonb");
+
+        private static final HelidonJsonType DEFAULT = JSON_P;
+
+        private static final String HELIDON_JSON_TYPE_PREFIX = "helidonJsonType-";
+        private final String jsonTypeName;
+
+        HelidonJsonType(String jsonTypeName){
+            this.jsonTypeName = jsonTypeName;
+        }
+
+        String fullJsonTypeName() {
+            return HELIDON_JSON_TYPE_PREFIX + jsonTypeName;
         }
     }
 }

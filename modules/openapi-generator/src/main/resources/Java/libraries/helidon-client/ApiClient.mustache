@@ -1,0 +1,409 @@
+{{>licenseInfo}}
+package {{invokerPackage}};
+
+{{#jsonb}}import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;{{/jsonb}}
+{{#jackson}}import com.fasterxml.jackson.databind.ObjectMapper;{{/jackson}}
+{{#openApiNullable}}
+{{#jackson}}import org.openapitools.jackson.nullable.JsonNullableModule;{{/jackson}}
+{{/openApiNullable}}
+
+import io.helidon.media.common.MediaSupport;
+{{#jsonb}}import io.helidon.media.jsonb.JsonbSupport;{{/jsonb}}
+{{#jackson}}import io.helidon.media.jackson.JacksonSupport;{{/jackson}}
+import io.helidon.webclient.WebClient;
+import io.helidon.webclient.WebClientRequestBuilder;
+import io.helidon.webclient.WebClientResponse;
+
+import java.net.URI;
+import java.net.URLEncoder;
+import java.time.Duration;
+{{#java8}}
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+{{/java8}}
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+{{#jsonb}}import java.util.Map;{{/jsonb}}
+import java.util.StringJoiner;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+/**
+ * Configuration and utility class for API clients.
+ *
+ * <p>This class can be constructed and modified, then used to instantiate the
+ * various API classes. The API classes use the settings in this class to
+ * configure themselves, but otherwise do not store a link to this class.</p>
+ *
+ * <p>This class is mutable and not synchronized, so it is not thread-safe.
+ * The API classes generated from this are immutable and thread-safe.</p>
+ *
+ * <p>The setter methods of this class return the current object to facilitate
+ * a fluent style of configuration.</p>
+ */
+{{>generatedAnnotation}}
+public class ApiClient {
+
+  private WebClient.Builder builder;
+{{#jsonb}}  private JsonbConfig jsonbConfig;{{/jsonb}}
+{{#jackson}}  private ObjectMapper mapper;{{/jackson}}
+  private String scheme;
+  private String host;
+  private int port;
+  private String basePath;
+  private Consumer<WebClientRequestBuilder> interceptor;
+  private Consumer<WebClientResponse> responseInterceptor;
+  private Duration readTimeout;
+
+  private static String valueToString(Object value) {
+    if (value == null) {
+      return "";
+    }
+    {{#java8}}
+    if (value instanceof OffsetDateTime) {
+      return ((OffsetDateTime) value).format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+    }
+    {{/java8}}
+    return value.toString();
+  }
+
+  /**
+   * URL encode a string in the UTF-8 encoding.
+   *
+   * @param s String to encode.
+   * @return URL-encoded representation of the input string.
+   */
+  public static String urlEncode(String s) {
+    return URLEncoder.encode(s, UTF_8);
+  }
+
+  /**
+   * Convert a URL query name/value parameter to a list of encoded {@link Pair}
+   * objects.
+   *
+   * <p>The value can be null, in which case an empty list is returned.</p>
+   *
+   * @param name The query name parameter.
+   * @param value The query value, which may not be a collection but may be
+   *              null.
+   * @return A singleton list of the {@link Pair} objects representing the input
+   * parameters, which is encoded for use in a URL. If the value is null, an
+   * empty list is returned.
+   */
+  public static List<Pair> parameterToPairs(String name, Object value) {
+    if (name == null || name.isEmpty() || value == null) {
+      return Collections.emptyList();
+    }
+    return Collections.singletonList(new Pair(urlEncode(name), urlEncode(valueToString(value))));
+  }
+
+  /**
+   * Convert a URL query name/collection parameter to a list of encoded
+   * {@link Pair} objects.
+   *
+   * @param collectionFormat The swagger collectionFormat string (csv, tsv, etc).
+   * @param name The query name parameter.
+   * @param values A collection of values for the given query name, which may be
+   *               null.
+   * @return A list of {@link Pair} objects representing the input parameters,
+   * which is encoded for use in a URL. If the values collection is null, an
+   * empty list is returned.
+   */
+  public static List<Pair> parameterToPairs(
+      String collectionFormat, String name, Collection<?> values) {
+    if (name == null || name.isEmpty() || values == null || values.isEmpty()) {
+      return Collections.emptyList();
+    }
+
+    // get the collection format (default: csv)
+    String format = collectionFormat == null || collectionFormat.isEmpty() ? "csv" : collectionFormat;
+
+    // create the params based on the collection format
+    if ("multi".equals(format)) {
+      return values.stream()
+          .map(value -> new Pair(urlEncode(name), urlEncode(valueToString(value))))
+          .collect(Collectors.toList());
+    }
+
+    String delimiter;
+    switch(format) {
+      case "csv":
+        delimiter = urlEncode(",");
+        break;
+      case "ssv":
+        delimiter = urlEncode(" ");
+        break;
+      case "tsv":
+        delimiter = urlEncode("\t");
+        break;
+      case "pipes":
+        delimiter = urlEncode("|");
+        break;
+      default:
+        throw new IllegalArgumentException("Illegal collection format: " + collectionFormat);
+    }
+
+    StringJoiner joiner = new StringJoiner(delimiter);
+    for (Object value : values) {
+      joiner.add(urlEncode(valueToString(value)));
+    }
+
+    return Collections.singletonList(new Pair(urlEncode(name), joiner.toString()));
+  }
+
+  /**
+   * Creates a new {@code ApiClient} with default builder and default URI.
+   */
+  public ApiClient() {
+    this.builder = createDefaultWebClientBuilder();
+    updateBaseUri(getDefaultBaseUri());
+    interceptor = null;
+    readTimeout = null;
+    responseInterceptor = null;
+  }
+
+  /**
+   * Creates a new (@code ApiClient} with the specified builder and base URI.
+   *
+   * @param builder {@code WebClient.Builder} to use in constructing the {@code WebClient} in the {@code ApiClient}
+   * @param baseUri the base URI {@code String} for the API client
+   */
+  public ApiClient(WebClient.Builder builder, String baseUri) {
+    this.builder = builder;
+    updateBaseUri(baseUri != null ? baseUri : getDefaultBaseUri());
+    interceptor = null;
+    readTimeout = null;
+    responseInterceptor = null;
+  }
+
+  protected String getDefaultBaseUri() {
+    return "{{{basePath}}}";
+  }
+
+  protected WebClient.Builder createDefaultWebClientBuilder() {
+    MediaSupport mediaSupport;
+    {{#jsonb}}mediaSupport = jsonbConfig == null ? JsonbSupport.create() : JsonbSupport.create(JsonbBuilder.create(jsonbConfig));{{/jsonb}}
+    {{#jackson}}mediaSupport = mapper == null ? JacksonSupport.create() : JacksonSupport.create(mapper);{{/jackson}}
+    return WebClient.builder()
+                .addMediaSupport(mediaSupport);
+  }
+
+  public void updateBaseUri(String baseUri) {
+    URI uri = URI.create(baseUri);
+    scheme = uri.getScheme();
+    host = uri.getHost();
+    port = uri.getPort();
+    basePath = uri.getRawPath();
+  }
+
+  /**
+   * Set a custom {@link WebClient.Builder} object to use when creating the
+   * {@link WebClient} that is used by the API client.
+   *
+   * @param builder Custom client builder.
+   * @return This object.
+   */
+  public ApiClient setWebClientBuilder(WebClient.Builder builder) {
+    this.builder = builder;
+    return this;
+  }
+
+  /**
+   * Get an {@link WebClient} based on the current {@link WebClient.Builder}.
+   *
+   * <p>The returned object is immutable and thread-safe.</p>
+   *
+   * @return the WebClient.
+   */
+  public WebClient getWebClient() {
+    return builder.build();
+  }
+
+{{#jsonb}}
+  /**
+   *
+   * Set custom JSON-B configuration to serialize and deserialize the request
+   * and response bodies.
+   * @param jsonbConfig {@link JsonbConfig}
+   * @return This object
+   */
+  public ApiClient setJsonbConfig(JsonbConfig jsonbConfig) {
+    this.jsonbConfig = jsonbConfig;
+    return this;
+  }
+
+  /**
+   * Returns a copy of the JSON-B configuration previously set.
+   *
+   * @return a copy of the JSON-B configuration
+   */
+  public JsonbConfig getJsonbConfig() {
+    if (jsonbConfig == null) {
+      return null;
+    }
+    JsonbConfig result = new JsonbConfig();
+    Map<String, Object> props = jsonbConfig.getAsMap();
+    props.forEach((k, v) -> result.setProperty(k, v));
+    return result;
+  }
+{{/jsonb}}
+{{#jackson}}
+  /**
+   * Set a custom {@link ObjectMapper} to serialize and deserialize the request
+   * and response bodies.
+   *
+   * @param mapper Custom object mapper.
+   * @return This object.
+   */
+  public ApiClient setObjectMapper(ObjectMapper mapper) {
+    this.mapper = mapper;
+    return this;
+  }
+
+  /**
+   * Get a copy of the current {@link ObjectMapper}.
+   *
+   * @return A copy of the current object mapper.
+   */
+  public ObjectMapper getObjectMapper() {
+    return mapper.copy();
+  }
+{{/jackson}}
+  /**
+   * Set a custom host name for the target service.
+   *
+   * @param host The host name of the target service.
+   * @return This object.
+   */
+  public ApiClient setHost(String host) {
+    this.host = host;
+    return this;
+  }
+
+  /**
+   * Set a custom port number for the target service.
+   *
+   * @param port The port of the target service. Set this to -1 to reset the
+   *             value to the default for the scheme.
+   * @return This object.
+   */
+  public ApiClient setPort(int port) {
+    this.port = port;
+    return this;
+  }
+
+  /**
+   * Set a custom base path for the target service, for example '/v2'.
+   *
+   * @param basePath The base path against which the rest of the path is
+   *                 resolved.
+   * @return This object.
+   */
+  public ApiClient setBasePath(String basePath) {
+    this.basePath = basePath;
+    return this;
+  }
+
+  /**
+   * Get the base URI to resolve the endpoint paths against.
+   *
+   * @return The complete base URI that the rest of the API parameters are
+   * resolved against.
+   */
+  public String getBaseUri() {
+    return scheme + "://" + host + (port == -1 ? "" : ":" + port) + basePath;
+  }
+
+  /**
+   * Set a custom scheme for the target service, for example 'https'.
+   *
+   * @param scheme The scheme of the target service
+   * @return This object.
+   */
+  public ApiClient setScheme(String scheme){
+    this.scheme = scheme;
+    return this;
+  }
+
+  /**
+   * Set a custom request interceptor.
+   *
+   * <p>A request interceptor is a mechanism for altering each request before it
+   * is sent. After the request has been fully configured but not yet built, the
+   * request builder is passed into this function for further modification,
+   * after which it is sent out.</p>
+   *
+   * <p>This is useful for altering the requests in a custom manner, such as
+   * adding headers. It could also be used for logging and monitoring.</p>
+   *
+   * @param interceptor A function invoked before creating each request. A value
+   *                    of null resets the interceptor to a no-op.
+   * @return This object.
+   */
+  public ApiClient setRequestInterceptor(Consumer<WebClientRequestBuilder> interceptor) {
+    this.interceptor = interceptor;
+    return this;
+  }
+
+  /**
+   * Get the custom interceptor.
+   *
+   * @return The custom interceptor that was set, or null if there isn't any.
+   */
+  public Consumer<WebClientRequestBuilder> getRequestInterceptor() {
+    return interceptor;
+  }
+
+  /**
+   * Set a custom response interceptor.
+   *
+   * <p>This is useful for logging, monitoring or extraction of header variables</p>
+   *
+   * @param interceptor A function invoked before creating each request. A value
+   *                    of null resets the interceptor to a no-op.
+   * @return This object.
+   */
+  public ApiClient setResponseInterceptor(Consumer<WebClientResponse> interceptor) {
+    this.responseInterceptor = interceptor;
+    return this;
+  }
+
+ /**
+   * Get the custom response interceptor.
+   *
+   * @return The custom interceptor that was set, or null if there isn't any.
+   */
+  public Consumer<WebClientResponse> getResponseInterceptor() {
+    return responseInterceptor;
+  }
+
+  /**
+   * Set the read timeout for the http client.
+   *
+   * <p>This is the value used by default for each request, though it can be
+   * overridden on a per-request basis with a request interceptor.</p>
+   *
+   * @param readTimeout The read timeout used by default by the http client.
+   *                    Setting this value to null resets the timeout to an
+   *                    effectively infinite value.
+   * @return This object.
+   */
+  public ApiClient setReadTimeout(Duration readTimeout) {
+    this.readTimeout = readTimeout;
+    return this;
+  }
+  
+  /**
+   * Get the read timeout that was set.
+   *
+   * @return The read timeout, or null if no timeout was set. Null represents
+   * an infinite wait time.
+   */
+  public Duration getReadTimeout() {
+    return readTimeout;
+  }
+}
