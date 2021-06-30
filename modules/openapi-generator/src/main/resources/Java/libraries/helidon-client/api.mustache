@@ -33,7 +33,7 @@ import java.util.Map;
 
 {{#helidonAsync}}
 import io.helidon.common.reactive.Single;
-//import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletableFuture;
 {{/helidonAsync}}
 
 import java.util.concurrent.ExecutionException;
@@ -61,7 +61,7 @@ public class {{classname}} {
   }
   {{#helidonAsync}}
 
-  private ApiException getApiException(String operationId, WebClientResponse<String>localVarResponse) throws ExecutionException, InterruptedException {
+  private ApiException getApiException(String operationId, WebClientResponse localVarResponse) throws ExecutionException, InterruptedException {
     return new ApiException(localVarResponse.status().code(),
         operationId + " call received non-success response",
         localVarResponse.headers(),
@@ -161,31 +161,7 @@ public class {{classname}} {
     {{/returnType}}
     {{/helidonAsync}}
     {{#helidonAsync}}
-    try {
-      WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
-      return memberVarWebClient.sendAsync(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofString()).thenComposeAsync(localVarResponse -> {
-            if (localVarResponse.statusCode()/ 100 != 2) {
-              return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));
-            }
-            {{#returnType}}
-            try {
-              return CompletableFuture.completedFuture(
-                  memberVarObjectMapper.readValue(localVarResponse.body(), new TypeReference<{{{returnType}}}>() {})
-              );
-            } catch (IOException e) {
-              return CompletableFuture.failedFuture(new ApiException(e));
-            }
-            {{/returnType}}
-            {{^returnType}}
-            return CompletableFuture.completedFuture(null);
-            {{/returnType}}
-      });
-    }
-    catch (ApiException e) {
-      return CompletableFuture.failedFuture(e);
-    }
+    return {{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}}).thenApply(ApiResponse::getData);
     {{/helidonAsync}}
   }
 
@@ -234,34 +210,32 @@ public class {{classname}} {
     {{/helidonAsync}}
     {{#helidonAsync}}
     try {
-      HttpRequest.Builder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
-      return memberVarWebClient.sendAsync(
-          localVarRequestBuilder.build(),
-          HttpResponse.BodyHandlers.ofString()).thenComposeAsync(localVarResponse -> {
-            if (localVarResponse.statusCode()/ 100 != 2) {
+      WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+      return localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}})
+        .thenComposeAsync(localVarResponse -> {
+          try {
+            if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
               return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));
             }
             {{#returnType}}
-            try {
-              return CompletableFuture.completedFuture(
-                  new ApiResponse<{{{returnType}}}>(
-                      localVarResponse.statusCode(),
-                      localVarResponse.headers().map(),
-                      memberVarObjectMapper.readValue(localVarResponse.body(), new TypeReference<{{{returnType}}}>() {}))
+            return CompletableFuture.completedFuture(
+              new ApiResponse<{{{returnType}}}>(
+                localVarResponse.status().code(),
+                localVarResponse.headers().toMap(),
+                localVarResponse.content().as({{returnType}}.class).get()
+                )
               );
-            } catch (IOException e) {
-              return CompletableFuture.failedFuture(new ApiException(e));
-            }
             {{/returnType}}
             {{^returnType}}
             return CompletableFuture.completedFuture(
-                new ApiResponse<Void>(localVarResponse.statusCode(), localVarResponse.headers().map(), null)
-            );
+              new ApiResponse<Void>(localVarResponse.status().code(), localVarResponse.headers().toMap(), null)
+              );
             {{/returnType}}
-        }
-      );
-    }
-    catch (ApiException e) {
+          } catch (ExecutionException | InterruptedException e) {
+            return CompletableFuture.failedFuture(new ApiException(e));
+          }
+        }).toCompletableFuture();
+    } catch (ApiException e) {
       return CompletableFuture.failedFuture(e);
     }
     {{/helidonAsync}}
