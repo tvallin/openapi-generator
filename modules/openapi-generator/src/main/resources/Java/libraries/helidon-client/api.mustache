@@ -212,7 +212,7 @@ public class {{classname}} {
     try {
       WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
       return localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}})
-        .thenComposeAsync(localVarResponse -> {
+        .thenCompose(localVarResponse -> {
           try {
             if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
               return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));

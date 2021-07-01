@@ -15,9 +15,9 @@ import java.util.List;
 import java.util.Map;
 {{/fullJavaUtil}}
 
-{{#asyncNative}}
+{{#helidonAsync}}
 import java.util.concurrent.CompletableFuture;
-{{/asyncNative}}
+{{/helidonAsync}}
 
 /**
  * API tests for {{classname}}
@@ -42,15 +42,15 @@ public class {{classname}}Test {
         {{{dataType}}} {{paramName}} = null;
         {{/allParams}}
         {{^vendorExtensions.x-group-parameters}}
-        {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}} response = {{/returnType}}
-        {{^returnType}}{{#asyncNative}}CompletableFuture<Void> response = {{/asyncNative}}{{/returnType}}api.{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+        {{#returnType}}{{#helidonAsync}}CompletableFuture<{{{returnType}}}>{{/helidonAsync}}{{^helidonAsync}}{{{returnType}}}{{/helidonAsync}} response = {{/returnType}}
+        {{^returnType}}{{#helidonAsync}}CompletableFuture<Void> response = {{/helidonAsync}}{{/returnType}}api.{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
         {{/vendorExtensions.x-group-parameters}}
         {{#vendorExtensions.x-group-parameters}}{{#hasParams}}
         {{classname}}.API{{operationId}}Request request = {{classname}}.API{{operationId}}Request.newBuilder(){{#allParams}}
           .{{paramName}}({{paramName}}){{/allParams}}
           .build();{{/hasParams}}
-        {{#returnType}}{{#asyncNative}}CompletableFuture<{{{returnType}}}>{{/asyncNative}}{{^asyncNative}}{{{returnType}}}{{/asyncNative}} response = {{/returnType}}
-        {{^returnType}}{{#asyncNative}}CompletableFuture<Void> response = {{/asyncNative}}{{/returnType}}api.{{operationId}}({{#hasParams}}request{{/hasParams}});
+        {{#returnType}}{{#helidonAsync}}CompletableFuture<{{{returnType}}}>{{/helidonAsync}}{{^helidonAsync}}{{{returnType}}}{{/helidonAsync}} response = {{/returnType}}
+        {{^returnType}}{{#helidonAsync}}CompletableFuture<Void> response = {{/helidonAsync}}{{/returnType}}api.{{operationId}}({{#hasParams}}request{{/hasParams}});
         {{/vendorExtensions.x-group-parameters}}
 
         // TODO: test validations
