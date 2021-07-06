@@ -25,18 +25,27 @@ import java.util.List;
 import java.util.Map;
 {{/fullJavaUtil}}
 
+import java.util.concurrent.CompletableFuture;
+
 import java.util.concurrent.ExecutionException;
 
 {{>generatedAnnotation}}
 {{#operations}}
-public class {{classname}} extends {{classname}}Base {
+public class {{classname}}Async extends {{classname}}Base {
 
-  public {{classname}}() {
+  public {{classname}}Async() {
     this(new ApiClient());
   }
 
-  public {{classname}}(ApiClient apiClient) {
+  public {{classname}}Async(ApiClient apiClient) {
     super(apiClient);
+  }
+
+  private ApiException getApiException(String operationId, WebClientResponse localVarResponse) throws ExecutionException, InterruptedException {
+    return new ApiException(localVarResponse.status().code(),
+        operationId + " call received non-success response",
+        localVarResponse.headers(),
+        localVarResponse.content().as(String.class).get());
   }
 
   protected ApiException createApiException(WebClientResponse response, String msgPrefix) throws IOException, ExecutionException, InterruptedException {
@@ -54,9 +63,7 @@ public class {{classname}} extends {{classname}}Base {
    * {{summary}}
    * {{notes}}
    * @param apiRequest {@link API{{operationId}}Request}
-   {{#returnType}}
-   * @return {{returnType}}
-   {{/returnType}}
+   * @return CompletableFuture&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
    * @deprecated
@@ -69,18 +76,18 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{operationId}}(API{{operationId}}Request apiRequest) throws ApiException {
+  public {{#returnType}}CompletableFuture<{{{returnType}}}>{{{returnType}}}{{/returnType}}{{^returnType}}CompletableFuture<Void>{{/returnType}} {{operationId}}(API{{operationId}}Request apiRequest) throws ApiException {
     {{#allParams}}
     {{{dataType}}} {{paramName}} = apiRequest.{{paramName}}();
     {{/allParams}}
-    {{#returnType}}return {{/returnType}}{{^returnType}}{{/returnType}}{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+    {{#returnType}}return {{/returnType}}{{^returnType}}return {{/returnType}}{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
   }
 
   /**
    * {{summary}}
    * {{notes}}
    * @param apiRequest {@link API{{operationId}}Request}
-   * @return ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;
+   * @return CompletableFuture&lt;ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;>
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
    * @deprecated
@@ -93,7 +100,7 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}WithHttpInfo(API{{operationId}}Request apiRequest) throws ApiException {
+  public CompletableFuture<ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>> {{operationId}}WithHttpInfo(API{{operationId}}Request apiRequest) throws ApiException {
     {{#allParams}}
     {{{dataType}}} {{paramName}} = apiRequest.{{paramName}}();
     {{/allParams}}
@@ -108,9 +115,7 @@ public class {{classname}} extends {{classname}}Base {
    {{#allParams}}
    * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
    {{/allParams}}
-   {{#returnType}}
-   * @return {{returnType}}
-   {{/returnType}}
+   * @return CompletableFuture&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
    * @deprecated
@@ -123,11 +128,8 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
-    {{#returnType}}ApiResponse<{{{returnType}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
-    {{#returnType}}
-    return localVarResponse.getData();
-    {{/returnType}}
+  public {{#returnType}}CompletableFuture<{{{returnType}}}>{{/returnType}}{{^returnType}}CompletableFuture<Void>{{/returnType}} {{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+    return {{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}}).thenApply(ApiResponse::getData);
   }
 
   /**
@@ -136,7 +138,7 @@ public class {{classname}} extends {{classname}}Base {
    {{#allParams}}
    * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
    {{/allParams}}
-   * @return ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;
+   * @return CompletableFuture&lt;ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;&gt;
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
    * @deprecated
@@ -149,27 +151,35 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}WithHttpInfo({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
-    WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+  public CompletableFuture<ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>> {{operationId}}WithHttpInfo({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
     try {
-        WebClientResponse localVarResponse = localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}}).await();
-      if (responseInterceptor() != null) {
-        responseInterceptor().accept(localVarResponse);
-      }
-      if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
-        throw createApiException(localVarResponse, "{{operationId}} call received non-success response");
-      }
-      return new ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>(
-          localVarResponse.status().code(),
-          localVarResponse.headers().toMap(),
-        {{#returnType}}localVarResponse.content().as({{returnType}}.class).get(){{/returnType}}{{^returnType}}null{{/returnType}}
-        );
-    } catch (IOException | ExecutionException e) {
-      throw new ApiException(e);
-    }
-    catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new ApiException(e);
+      WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+      return localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}})
+        .thenCompose(localVarResponse -> {
+          try {
+            if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
+              return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));
+            }
+            {{#returnType}}
+            return CompletableFuture.completedFuture(
+              new ApiResponse<{{{returnType}}}>(
+                localVarResponse.status().code(),
+                localVarResponse.headers().toMap(),
+                localVarResponse.content().as({{returnType}}.class).get()
+                )
+              );
+            {{/returnType}}
+            {{^returnType}}
+            return CompletableFuture.completedFuture(
+              new ApiResponse<Void>(localVarResponse.status().code(), localVarResponse.headers().toMap(), null)
+              );
+            {{/returnType}}
+          } catch (ExecutionException | InterruptedException e) {
+            return CompletableFuture.failedFuture(new ApiException(e));
+          }
+        }).toCompletableFuture();
+    } catch (ApiException e) {
+      return CompletableFuture.failedFuture(e);
     }
   }
 

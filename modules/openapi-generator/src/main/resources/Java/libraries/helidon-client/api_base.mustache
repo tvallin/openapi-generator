@@ -3,20 +3,14 @@ package {{package}};
 
 import {{invokerPackage}}.ApiClient;
 import {{invokerPackage}}.ApiException;
-import {{invokerPackage}}.ApiResponse;
-import {{modelPackage}}.*;
-import {{invokerPackage}}.Pair;
 
-{{#imports}}import {{import}};
-{{/imports}}
-
-import io.helidon.common.http.Http;
-import io.helidon.common.http.MediaType;
+import io.helidon.webclient.WebClient;
 import io.helidon.webclient.WebClientRequestBuilder;
-import io.helidon.webclient.WebClientRequestHeaders;
 import io.helidon.webclient.WebClientResponse;
 
 import java.io.IOException;
+import java.time.Duration;
+import java.util.function.Consumer;
 
 {{^fullJavaUtil}}
 import java.util.ArrayList;
@@ -28,15 +22,44 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 {{>generatedAnnotation}}
-{{#operations}}
-public class {{classname}} extends {{classname}}Base {
+class {{classname}}Base {
 
-  public {{classname}}() {
+  private final WebClient memberVarWebClient;
+  private final String memberVarBaseUri;
+  private final Consumer<WebClientRequestBuilder> memberVarInterceptor;
+  private final Duration memberVarReadTimeout;
+  private final Consumer<WebClientResponse> memberVarResponseInterceptor;
+
+  protected {{classname}}Base() {
     this(new ApiClient());
   }
 
-  public {{classname}}(ApiClient apiClient) {
-    super(apiClient);
+  protected {{classname}}Base(ApiClient apiClient) {
+    memberVarWebClient = apiClient.getWebClient();
+    memberVarBaseUri = apiClient.getBaseUri();
+    memberVarInterceptor = apiClient.getRequestInterceptor();
+    memberVarReadTimeout = apiClient.getReadTimeout();
+    memberVarResponseInterceptor = apiClient.getResponseInterceptor();
+  }
+
+  protected WebClient webClient() {
+    return memberVarWebClient;
+  }
+
+  protected String baseUri() {
+    return memberVarBaseUri;
+  }
+
+  protected Consumer<WebClientRequestBuilder> interceptor() {
+    return memberVarInterceptor;
+  }
+
+  protected Consumer<WebClientResponse> responseInterceptor() {
+    return memberVarResponseInterceptor;
+  }
+
+  protected Duration readTimeout() {
+    return memberVarReadTimeout;
   }
 
   protected ApiException createApiException(WebClientResponse response, String msgPrefix) throws IOException, ExecutionException, InterruptedException {
@@ -55,7 +78,7 @@ public class {{classname}} extends {{classname}}Base {
    * {{notes}}
    * @param apiRequest {@link API{{operationId}}Request}
    {{#returnType}}
-   * @return {{returnType}}
+   * @return {{#helidonAsync}}CompletableFuture&lt;{{/helidonAsync}}{{returnType}}{{#helidonAsync}}&gt;{{/helidonAsync}}
    {{/returnType}}
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
@@ -69,18 +92,18 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{operationId}}(API{{operationId}}Request apiRequest) throws ApiException {
+  public {{#returnType}}{{#helidonAsync}}CompletableFuture<{{{returnType}}}>{{/helidonAsync}}{{^helidonAsync}}{{{returnType}}}{{/helidonAsync}}{{/returnType}}{{^returnType}}{{#helidonAsync}}CompletableFuture<Void>{{/helidonAsync}}{{^helidonAsync}}void{{/helidonAsync}}{{/returnType}} {{operationId}}(API{{operationId}}Request apiRequest) throws ApiException {
     {{#allParams}}
     {{{dataType}}} {{paramName}} = apiRequest.{{paramName}}();
     {{/allParams}}
-    {{#returnType}}return {{/returnType}}{{^returnType}}{{/returnType}}{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+    {{#returnType}}return {{/returnType}}{{^returnType}}{{#helidonAsync}}return {{/helidonAsync}}{{/returnType}}{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
   }
 
   /**
    * {{summary}}
    * {{notes}}
    * @param apiRequest {@link API{{operationId}}Request}
-   * @return ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;
+   * @return {{#helidonAsync}}CompletableFuture&lt;{{/helidonAsync}}ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;{{#helidonAsync}}&gt;{{/helidonAsync}}
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
    * @deprecated
@@ -93,7 +116,7 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}WithHttpInfo(API{{operationId}}Request apiRequest) throws ApiException {
+  public {{#helidonAsync}}CompletableFuture<{{/helidonAsync}}ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>{{#helidonAsync}}>{{/helidonAsync}} {{operationId}}WithHttpInfo(API{{operationId}}Request apiRequest) throws ApiException {
     {{#allParams}}
     {{{dataType}}} {{paramName}} = apiRequest.{{paramName}}();
     {{/allParams}}
@@ -109,7 +132,7 @@ public class {{classname}} extends {{classname}}Base {
    * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
    {{/allParams}}
    {{#returnType}}
-   * @return {{returnType}}
+   * @return {{#helidonAsync}}CompletableFuture&lt;{{/helidonAsync}}{{returnType}}{{#helidonAsync}}&gt;{{/helidonAsync}}
    {{/returnType}}
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
@@ -123,11 +146,16 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public {{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}void{{/returnType}} {{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+  public {{#returnType}}{{#helidonAsync}}CompletableFuture<{{{returnType}}}>{{/helidonAsync}}{{^helidonAsync}}{{{returnType}}}{{/helidonAsync}}{{/returnType}}{{^returnType}}{{#helidonAsync}}CompletableFuture<Void>{{/helidonAsync}}{{^helidonAsync}}void{{/helidonAsync}}{{/returnType}} {{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+    {{^helidonAsync}}
     {{#returnType}}ApiResponse<{{{returnType}}}> localVarResponse = {{/returnType}}{{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
     {{#returnType}}
     return localVarResponse.getData();
     {{/returnType}}
+    {{/helidonAsync}}
+    {{#helidonAsync}}
+    return {{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}}).thenApply(ApiResponse::getData);
+    {{/helidonAsync}}
   }
 
   /**
@@ -136,7 +164,7 @@ public class {{classname}} extends {{classname}}Base {
    {{#allParams}}
    * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
    {{/allParams}}
-   * @return ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;
+   * @return {{#helidonAsync}}CompletableFuture&lt;{{/helidonAsync}}ApiResponse&lt;{{#returnType}}{{returnType}}{{/returnType}}{{^returnType}}Void{{/returnType}}&gt;{{#helidonAsync}}&gt;{{/helidonAsync}}
    * @throws ApiException if fails to make API call
    {{#isDeprecated}}
    * @deprecated
@@ -149,12 +177,13 @@ public class {{classname}} extends {{classname}}Base {
   {{#isDeprecated}}
   @Deprecated
   {{/isDeprecated}}
-  public ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}> {{operationId}}WithHttpInfo({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+  public {{#helidonAsync}}CompletableFuture<{{/helidonAsync}}ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>{{#helidonAsync}}>{{/helidonAsync}} {{operationId}}WithHttpInfo({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+    {{^helidonAsync}}
     WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
     try {
         WebClientResponse localVarResponse = localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}}).await();
-      if (responseInterceptor() != null) {
-        responseInterceptor().accept(localVarResponse);
+      if (memberVarResponseInterceptor != null) {
+        memberVarResponseInterceptor.accept(localVarResponse);
       }
       if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
         throw createApiException(localVarResponse, "{{operationId}} call received non-success response");
@@ -171,6 +200,38 @@ public class {{classname}} extends {{classname}}Base {
       Thread.currentThread().interrupt();
       throw new ApiException(e);
     }
+    {{/helidonAsync}}
+    {{#helidonAsync}}
+    try {
+      WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+      return localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}})
+        .thenCompose(localVarResponse -> {
+          try {
+            if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
+              return CompletableFuture.failedFuture(getApiException("{{operationId}}", localVarResponse));
+            }
+            {{#returnType}}
+            return CompletableFuture.completedFuture(
+              new ApiResponse<{{{returnType}}}>(
+                localVarResponse.status().code(),
+                localVarResponse.headers().toMap(),
+                localVarResponse.content().as({{returnType}}.class).get()
+                )
+              );
+            {{/returnType}}
+            {{^returnType}}
+            return CompletableFuture.completedFuture(
+              new ApiResponse<Void>(localVarResponse.status().code(), localVarResponse.headers().toMap(), null)
+              );
+            {{/returnType}}
+          } catch (ExecutionException | InterruptedException e) {
+            return CompletableFuture.failedFuture(new ApiException(e));
+          }
+        }).toCompletableFuture();
+    } catch (ApiException e) {
+      return CompletableFuture.failedFuture(e);
+    }
+    {{/helidonAsync}}
   }
 
   private WebClientRequestBuilder {{operationId}}RequestBuilder({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
@@ -183,7 +244,7 @@ public class {{classname}} extends {{classname}}Base {
     {{/required}}
     {{/allParams}}
 
-    WebClientRequestBuilder localVarRequestBuilder = webClient().method("{{httpMethod}}");
+    WebClientRequestBuilder localVarRequestBuilder = memberVarWebClient.method("{{httpMethod}}");
 
     {{! Switch delimiters for baseName so we can write constants like "{query}" }}
     String localVarPath = "{{{path}}}"{{#pathParams}}
@@ -228,11 +289,11 @@ public class {{classname}} extends {{classname}}Base {
     {{/bodyParam}}
     localVarRequestBuilder.accept(MediaType.APPLICATION_JSON);
 
-    if (readTimeout() != null) {
-      localVarRequestBuilder.readTimeout(readTimeout().toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
+    if (memberVarReadTimeout != null) {
+      localVarRequestBuilder.readTimeout(memberVarReadTimeout.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
     }
-    if (interceptor() != null) {
-      interceptor().accept(localVarRequestBuilder);
+    if (memberVarInterceptor != null) {
+      memberVarInterceptor.accept(localVarRequestBuilder);
     }
     return localVarRequestBuilder;
   }
@@ -288,4 +349,3 @@ public class {{classname}} extends {{classname}}Base {
   {{/vendorExtensions.x-group-parameters}}
   {{/operation}}
 }
-{{/operations}}

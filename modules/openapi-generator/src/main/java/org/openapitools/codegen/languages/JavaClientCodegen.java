@@ -115,7 +115,6 @@ public class JavaClientCodegen extends AbstractJavaCodegen
     protected HelidonClientType helidonClientType = HelidonClientType.DEFAULT;
     protected HelidonJsonType helidonJsonType = HelidonJsonType.DEFAULT;
     protected String helidonVersion = HELIDON_DEFAULT_VERSION;
-    protected boolean asyncHelidon = false;
 
     protected boolean asyncNative = false;
     protected boolean parcelableModel = false;
@@ -180,7 +179,6 @@ public class JavaClientCodegen extends AbstractJavaCodegen
         cliOptions.add(helidonClientTypeOption);
 
         cliOptions.add(CliOption.newString(HELIDON_VERSION, "Version of Helidon (\"" + HELIDON_DEFAULT_VERSION + "\" (default))"));
-        cliOptions.add(CliOption.newBoolean(HELIDON_ASYNC, "Generate async Helidon WebClient APIs"));
 
 
         supportedLibraries.put(JERSEY1, "HTTP client: Jersey client 1.19.x. JSON processing: Jackson 2.9.x. Enable gzip request encoding using '-DuseGzipFeature=true'. IMPORTANT NOTE: jersey 1.x is no longer actively maintained so please upgrade to 'jersey2' or other HTTP libraries instead.");
@@ -322,10 +320,6 @@ public class JavaClientCodegen extends AbstractJavaCodegen
             if (additionalProperties.containsKey(HELIDON_VERSION)) {
                 this.setHelidonVersion(additionalProperties.get(HELIDON_VERSION)
                         .toString());
-            }
-
-            if (additionalProperties.containsKey(HELIDON_ASYNC)) {
-                this.setHelidonAsync(convertPropertyToBooleanAndWriteBack(HELIDON_ASYNC));
             }
 
             // Assign choice-specific boolean tags (e.g., helidonwebclient) for use from templates.
@@ -581,6 +575,8 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
             String helidonDefaultSerializationLibrary = SERIALIZATION_LIBRARY_JSONB;
 
+            apiTemplateFiles.put("api_base.mustache", ".java");
+            apiTemplateFiles.put("api_async.mustache", ".java");
             supportingFiles.add(new SupportingFile("ApiResponse.mustache", invokerFolder, "ApiResponse.java"));
             supportingFiles.add(new SupportingFile("AbstractOpenApiSchema.mustache", (sourceFolder + File.separator + modelPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar), "AbstractOpenApiSchema.java"));
 
@@ -798,6 +794,10 @@ public class JavaClientCodegen extends AbstractJavaCodegen
                 subFolder = "/rxjava";
             }
             return apiFileFolder() + subFolder + '/' + toApiFilename(tag) + suffix;
+        } else if (HELIDON_CLIENT.equals(getLibrary()) && templateName.startsWith("api_")) {
+            String suffix = apiTemplateFiles().get(templateName);
+            String filenameSuffix = camelize(templateName.substring("api".length(), templateName.indexOf(".")));
+            return apiFileFolder() + File.separator + toApiFilename(tag) + filenameSuffix + suffix;
         } else {
             return super.apiFilename(templateName, tag);
         }
@@ -1058,10 +1058,6 @@ public class JavaClientCodegen extends AbstractJavaCodegen
 
     public void setHelidonVersion(String helidonVersion) {
         this.helidonVersion = helidonVersion;
-    }
-
-    public void setHelidonAsync(boolean asyncHelidon) {
-        this.asyncHelidon = asyncHelidon;
     }
 
     public void setParcelableModel(boolean parcelableModel) {
