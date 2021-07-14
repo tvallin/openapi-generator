@@ -12,6 +12,7 @@ import {{invokerPackage}}.Pair;
 
 import io.helidon.common.http.Http;
 import io.helidon.common.http.MediaType;
+import io.helidon.common.reactive.Single;
 import io.helidon.webclient.WebClientRequestBuilder;
 import io.helidon.webclient.WebClientRequestHeaders;
 import io.helidon.webclient.WebClientResponse;
@@ -129,7 +130,32 @@ public class {{classname}}Async extends {{classname}}Base {
   @Deprecated
   {{/isDeprecated}}
   public {{#returnType}}CompletableFuture<{{{returnType}}}>{{/returnType}}{{^returnType}}CompletableFuture<Void>{{/returnType}} {{operationId}}({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
-    return {{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}}).thenApply(ApiResponse::getData);
+    return {{operationId}}WithHttpInfo({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}}).thenCompose(ApiResponse::getFutureData);
+  }
+
+  /**
+   * {{summary}}
+   * {{notes}}
+   {{#allParams}}
+   * @param {{paramName}} {{description}}{{#required}} (required){{/required}}{{^required}} (optional{{^isContainer}}{{#defaultValue}}, default to {{.}}{{/defaultValue}}){{/isContainer}}{{/required}}
+   {{/allParams}}
+   * @return Single&lt;WebClientRespose&gt;
+   * @throws ApiException if fails to make API call
+   {{#isDeprecated}}
+   * @deprecated
+   {{/isDeprecated}}
+   {{#externalDocs}}
+   * {{description}}
+   * @see <a href="{{url}}">{{summary}} Documentation</a>
+   {{/externalDocs}}
+   */
+  {{#isDeprecated}}
+  @Deprecated
+  {{/isDeprecated}}
+  public Single<WebClientResponse> {{operationId}}WithResponse({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
+
+      WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+      return localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}});
   }
 
   /**
@@ -153,8 +179,7 @@ public class {{classname}}Async extends {{classname}}Base {
   {{/isDeprecated}}
   public CompletableFuture<ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>> {{operationId}}WithHttpInfo({{#allParams}}{{{dataType}}} {{paramName}}{{^-last}}, {{/-last}}{{/allParams}}) throws ApiException {
     try {
-      WebClientRequestBuilder localVarRequestBuilder = {{operationId}}RequestBuilder({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
-      return localVarRequestBuilder.submit({{#bodyParam}}{{paramName}}{{/bodyParam}})
+      return {{operationId}}WithResponse({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}})
         .thenCompose(localVarResponse -> {
           try {
             if (localVarResponse.status().family().compareTo(Http.ResponseStatus.Family.SUCCESSFUL) != 0) {
@@ -162,16 +187,12 @@ public class {{classname}}Async extends {{classname}}Base {
             }
             {{#returnType}}
             return CompletableFuture.completedFuture(
-              new ApiResponse<{{{returnType}}}>(
-                localVarResponse.status().code(),
-                localVarResponse.headers().toMap(),
-                localVarResponse.content().as({{returnType}}.class).get()
-                )
+                new ApiResponse<{{{returnType}}}>(localVarResponse, {{returnType}}.class)
               );
             {{/returnType}}
             {{^returnType}}
             return CompletableFuture.completedFuture(
-              new ApiResponse<Void>(localVarResponse.status().code(), localVarResponse.headers().toMap(), null)
+                new ApiResponse<Void>(localVarResponse)
               );
             {{/returnType}}
           } catch (ExecutionException | InterruptedException e) {
@@ -194,8 +215,9 @@ public class {{classname}}Async extends {{classname}}Base {
     {{/allParams}}
 
     WebClientRequestBuilder localVarRequestBuilder = webClient().method("{{httpMethod}}");
+    localVarRequestBuilder.uri(baseUri());
 
-    {{! Switch delimiters for baseName so we can write constants like "{query}" }}
+  {{! Switch delimiters for baseName so we can write constants like "{query}" }}
     String localVarPath = "{{{path}}}"{{#pathParams}}
         .replace({{=<% %>=}}"{<%baseName%>}"<%={{ }}=%>, ApiClient.urlEncode({{{paramName}}}.toString())){{/pathParams}};
 
@@ -297,5 +319,5 @@ public class {{classname}}Async extends {{classname}}Base {
   {{/hasParams}}
   {{/vendorExtensions.x-group-parameters}}
   {{/operation}}
-}
 {{/operations}}
+}

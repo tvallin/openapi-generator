@@ -160,10 +160,7 @@ public class {{classname}} extends {{classname}}Base {
         throw createApiException(localVarResponse, "{{operationId}} call received non-success response");
       }
       return new ApiResponse<{{#returnType}}{{{returnType}}}{{/returnType}}{{^returnType}}Void{{/returnType}}>(
-          localVarResponse.status().code(),
-          localVarResponse.headers().toMap(),
-        {{#returnType}}localVarResponse.content().as({{returnType}}.class).get(){{/returnType}}{{^returnType}}null{{/returnType}}
-        );
+          localVarResponse{{#returnType}}, {{returnType}}.class{{/returnType}});
     } catch (IOException | ExecutionException e) {
       throw new ApiException(e);
     }
@@ -184,6 +181,7 @@ public class {{classname}} extends {{classname}}Base {
     {{/allParams}}
 
     WebClientRequestBuilder localVarRequestBuilder = webClient().method("{{httpMethod}}");
+    localVarRequestBuilder.uri(baseUri());
 
     {{! Switch delimiters for baseName so we can write constants like "{query}" }}
     String localVarPath = "{{{path}}}"{{#pathParams}}
