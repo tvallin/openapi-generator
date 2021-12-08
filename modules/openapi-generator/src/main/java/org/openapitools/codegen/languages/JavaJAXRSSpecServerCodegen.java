@@ -24,6 +24,7 @@ import org.openapitools.codegen.meta.features.DocumentationFeature;
 
 import java.io.File;
 import java.util.Map;
+import java.util.stream.Stream;
 
 public class JavaJAXRSSpecServerCodegen extends AbstractJavaJAXRSServerCodegen {
 
@@ -204,6 +205,7 @@ public class JavaJAXRSSpecServerCodegen extends AbstractJavaJAXRSServerCodegen {
             supportingFiles.add(new SupportingFile("ibm-web-ext.xml.mustache", "src/main/webapp/WEB-INF", "ibm-web-ext.xml")
                     .doNotOverwrite());
         } else if(HELIDON_LIBRARY.equals(library)) {
+            String helidonVersion = additionalProperties.computeIfAbsent("helidonVersion", key -> "2.4.1").toString();
             supportingFiles.add(new SupportingFile("logging.properties.mustache", "src/main/resources", "logging.properties")
                     .doNotOverwrite());
             supportingFiles.add(new SupportingFile("microprofile-config.properties.mustache", "src/main/resources/META-INF", "microprofile-config.properties")
