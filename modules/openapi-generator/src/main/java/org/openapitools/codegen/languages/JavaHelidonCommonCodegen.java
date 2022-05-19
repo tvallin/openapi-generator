@@ -26,6 +26,10 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     static final String HELIDON_SE = "se";
 
     static final String MICROPROFILE_REST_CLIENT_DEFAULT_ROOT_PACKAGE = "javax";
+    static final String HELIDON_NIMA = "nima";
+    static final String HELIDON_NIMA_ANNOTATIONS = "nima-annotations";
+
+    static final String MICROPROFILE_ROOT_PACKAGE_PROPERTY = "rootJavaEEPackage";
 
     static final String SERIALIZATION_LIBRARY_JACKSON = "jackson";
     static final String SERIALIZATION_LIBRARY_JSONB = "jsonb";
