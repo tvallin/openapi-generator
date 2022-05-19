@@ -1,126 +1,137 @@
-{{#useSwaggerAnnotations}}
-import io.swagger.annotations.*;
-{{/useSwaggerAnnotations}}
-import java.util.Objects;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
-import com.fasterxml.jackson.annotation.JsonTypeName;
 
-{{#discriminator}}{{>typeInfoAnnotation}}{{/discriminator}}{{#description}}/**
- * {{.}}
- **/{{/description}}
-{{#useSwaggerAnnotations}}{{#description}}@ApiModel(description = "{{{.}}}"){{/description}}{{/useSwaggerAnnotations}}
-@JsonTypeName("{{name}}")
-{{>generatedAnnotation}}{{>additionalModelTypeAnnotations}}
+{{#jsonb}}
+import java.lang.reflect.Type;
+import {{rootJavaEEPackage}}.json.bind.annotation.JsonbTypeDeserializer;
+import {{rootJavaEEPackage}}.json.bind.annotation.JsonbTypeSerializer;
+import {{rootJavaEEPackage}}.json.bind.serializer.DeserializationContext;
+import {{rootJavaEEPackage}}.json.bind.serializer.JsonbDeserializer;
+import {{rootJavaEEPackage}}.json.bind.serializer.JsonbSerializer;
+import {{rootJavaEEPackage}}.json.bind.serializer.SerializationContext;
+import {{rootJavaEEPackage}}.json.stream.JsonGenerator;
+import {{rootJavaEEPackage}}.json.stream.JsonParser;
+import {{rootJavaEEPackage}}.json.bind.annotation.JsonbProperty;
+{{#vendorExtensions.x-has-readonly-properties}}
+import {{rootJavaEEPackage}}.json.bind.annotation.JsonbCreator;
+{{/vendorExtensions.x-has-readonly-properties}}
+{{/jsonb}}
+
+{{#description}}
+/**
+  * {{{.}}}
+ **/
+{{/description}}
+{{>additionalModelTypeAnnotations}}
 {{#vendorExtensions.x-class-extra-annotation}}
 {{{vendorExtensions.x-class-extra-annotation}}}
 {{/vendorExtensions.x-class-extra-annotation}}
-public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}} {{#vendorExtensions.x-implements}}{{#-first}}implements {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}}{{/vendorExtensions.x-implements}} {
+public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}}{{#vendorExtensions.x-implements}}{{#-first}} implements {{{.}}}{{/-first}}{{^-first}}, {{{.}}}{{/-first}}{{/vendorExtensions.x-implements}} {
   {{#vars}}{{#isEnum}}{{^isContainer}}
-
 {{>enumClass}}{{/isContainer}}{{#isContainer}}{{#mostInnerItems}}
-
 {{>enumClass}}{{/mostInnerItems}}{{/isContainer}}{{/isEnum}}
-  {{#vendorExtensions.x-field-extra-annotation}}
-  {{{vendorExtensions.x-field-extra-annotation}}}
-  {{/vendorExtensions.x-field-extra-annotation}}
-  private {{#useBeanValidation}}@Valid {{/useBeanValidation}}{{{datatypeWithEnum}}} {{name}}{{#defaultValue}} = {{{.}}}{{/defaultValue}};{{/vars}}{{#generateBuilders}}{{^additionalProperties}}
-
-  protected {{classname}}({{classname}}Builder<?, ?> b) {
-  {{#parent}}super(b);
-  {{/parent}}{{#vars}}this.{{name}} = b.{{name}};{{/vars}}
+{{#description}}
+ /**
+   * {{{.}}}
+  **/
+{{/description}}
+{{#vendorExtensions.x-field-extra-annotation}}
+{{{vendorExtensions.x-field-extra-annotation}}}
+{{/vendorExtensions.x-field-extra-annotation}}
+{{#isContainer}}
+  private {{{datatypeWithEnum}}} {{name}}{{#required}} = {{{defaultValue}}}{{/required}}{{^required}} = null{{/required}};
+{{/isContainer}}
+{{^isContainer}}
+  private {{{datatypeWithEnum}}} {{name}}{{#defaultValue}} = {{{.}}}{{/defaultValue}};
+{{/isContainer}}
+  {{/vars}}
+{{#vendorExtensions.x-has-readonly-properties}}{{^withXml}}
+  public {{classname}}() {
   }
 
-  public {{classname}}() { }{{/additionalProperties}}{{/generateBuilders}}
-
-  {{#vars}}/**
-   {{#description}}
-   * {{.}}
-   {{/description}}
-   {{#minimum}}
-   * minimum: {{.}}
-   {{/minimum}}
-   {{#maximum}}
-   * maximum: {{.}}
-   {{/maximum}}
-   **/
-  public {{classname}} {{name}}({{{datatypeWithEnum}}} {{name}}) {
+  @JsonbCreator
+  public {{classname}}(
+  {{#readOnlyVars}}
+    @JsonbProperty("{{baseName}}") {{{datatypeWithEnum}}} {{name}}{{^-last}}, {{/-last}}
+  {{/readOnlyVars}}
+  ) {
+  {{#readOnlyVars}}
     this.{{name}} = {{name}};
-    return this;
+  {{/readOnlyVars}}
   }
-
-  {{#vendorExtensions.x-extra-annotation}}{{{vendorExtensions.x-extra-annotation}}}{{/vendorExtensions.x-extra-annotation}}{{#useSwaggerAnnotations}}
-  @ApiModelProperty({{#example}}example = "{{{.}}}", {{/example}}{{#required}}required = {{required}}, {{/required}}value = "{{{description}}}"){{/useSwaggerAnnotations}}
-  @JsonProperty("{{baseName}}")
-{{#useBeanValidation}}{{>beanValidation}}{{/useBeanValidation}}  public {{>beanValidatedType}} {{getter}}() {
+  {{/withXml}}{{/vendorExtensions.x-has-readonly-properties}}
+  {{#vars}}
+ /**
+  {{#description}}
+   * {{.}}
+  {{/description}}
+  {{^description}}
+   * Get {{name}}
+  {{/description}}
+  {{#minimum}}
+   * minimum: {{.}}
+  {{/minimum}}
+  {{#maximum}}
+   * maximum: {{.}}
+  {{/maximum}}
+   * @return {{name}}
+  {{#deprecated}}
+   * @deprecated
+  {{/deprecated}}
+  **/
+{{#deprecated}}
+  @Deprecated
+{{/deprecated}}
+{{#vendorExtensions.x-extra-annotation}}
+  {{{vendorExtensions.x-extra-annotation}}}
+{{/vendorExtensions.x-extra-annotation}}
+{{#useBeanValidation}}{{>beanValidation}}{{/useBeanValidation}}  {{#withXml}}{{#isEnum}}{{^isArray}}{{^isMap}}public {{dataType}} {{getter}}() {
+    if ({{name}} == null) {
+      return null;
+    }
+    return {{name}}.value();
+  }{{/isMap}}{{/isArray}}{{/isEnum}}{{/withXml}}{{^withXml}}{{#isEnum}}{{^isArray}}{{^isMap}}public {{datatypeWithEnum}} {{getter}}() {
     return {{name}};
-  }
+  }{{/isMap}}{{/isArray}}{{/isEnum}}{{/withXml}}{{#isEnum}}{{#isArray}}public {{{datatypeWithEnum}}} {{getter}}() {
+    return {{name}};
+  }{{/isArray}}{{/isEnum}}{{#isEnum}}{{#isMap}}public {{{datatypeWithEnum}}} {{getter}}() {
+    return {{name}};
+  }{{/isMap}}{{/isEnum}}{{^isEnum}}public {{{datatypeWithEnum}}} {{getter}}() {
+    return {{name}};
+  }{{/isEnum}}
 
-  @JsonProperty("{{baseName}}")
-  {{#vendorExtensions.x-setter-extra-annotation}}{{{vendorExtensions.x-setter-extra-annotation}}}
+  {{^isReadOnly}}
+  /**
+    * Set {{name}}
+  **/
+  {{#vendorExtensions.x-setter-extra-annotation}}  {{{vendorExtensions.x-setter-extra-annotation}}}
   {{/vendorExtensions.x-setter-extra-annotation}}public void {{setter}}({{{datatypeWithEnum}}} {{name}}) {
     this.{{name}} = {{name}};
   }
 
-  {{#isArray}}
-  public {{classname}} add{{nameInCamelCase}}Item({{{items.datatypeWithEnum}}} {{name}}Item) {
-    if (this.{{name}} == null) {
-      this.{{name}} = {{{defaultValue}}};
-    }
-
-    this.{{name}}.add({{name}}Item);
+  public {{classname}} {{name}}({{{datatypeWithEnum}}} {{name}}) {
+    this.{{name}} = {{name}};
     return this;
   }
+  {{#isArray}}
 
-  public {{classname}} remove{{nameInCamelCase}}Item({{{items.datatypeWithEnum}}} {{name}}Item) {
-    if ({{name}}Item != null && this.{{name}} != null) {
-      this.{{name}}.remove({{name}}Item);
-    }
-
+  public {{classname}} add{{nameInCamelCase}}Item({{{items.datatypeWithEnum}}} {{name}}Item) {
+    this.{{name}}.add({{name}}Item);
     return this;
   }
   {{/isArray}}
   {{#isMap}}
-  public {{classname}} put{{nameInCamelCase}}Item(String key, {{{items.datatypeWithEnum}}} {{name}}Item) {
-    if (this.{{name}} == null) {
-      this.{{name}} = {{{defaultValue}}};
-    }
 
+  public {{classname}} put{{nameInCamelCase}}Item(String key, {{{items.datatypeWithEnum}}} {{name}}Item) {
     this.{{name}}.put(key, {{name}}Item);
     return this;
   }
-
-  public {{classname}} remove{{nameInCamelCase}}Item({{{items.datatypeWithEnum}}} {{name}}Item) {
-    if ({{name}}Item != null && this.{{name}} != null) {
-      this.{{name}}.remove({{name}}Item);
-    }
-
-    return this;
-  }
   {{/isMap}}
+  {{/isReadOnly}}
+
   {{/vars}}
 
-  @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
-    }{{#hasVars}}
-    {{classname}} {{classVarName}} = ({{classname}}) o;
-    return {{#vars}}Objects.equals(this.{{name}}, {{classVarName}}.{{name}}){{^-last}} &&
-        {{/-last}}{{/vars}}{{#parent}} &&
-        super.equals(o){{/parent}};{{/hasVars}}{{^hasVars}}
-    return {{#parent}}super.equals(o){{/parent}}{{^parent}}true{{/parent}};{{/hasVars}}
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash({{#vars}}{{name}}{{^-last}}, {{/-last}}{{/vars}}{{#parent}}{{#hasVars}}, {{/hasVars}}super.hashCode(){{/parent}});
-  }
-
+  /**
+    * Create a string representation of this pojo.
+  **/
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -135,46 +146,10 @@ public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}} {{#vendorExtens
    * Convert the given object to string with each line indented by 4 spaces
    * (except the first line).
    */
-  private String toIndentedString(Object o) {
+  private static String toIndentedString(Object o) {
     if (o == null) {
       return "null";
     }
     return o.toString().replace("\n", "\n    ");
   }
-
-{{#generateBuilders}}{{^additionalProperties}}
-  public static {{classname}}Builder<?, ?> builder() {
-    return new {{classname}}BuilderImpl();
-  }
-
-  private static final class {{classname}}BuilderImpl extends {{classname}}Builder<{{classname}}, {{classname}}BuilderImpl> {
-
-    @Override
-    protected {{classname}}BuilderImpl self() {
-      return this;
-    }
-
-    @Override
-    public {{classname}} build() {
-      return new {{classname}}(this);
-    }
-  }
-
-  public static abstract class {{classname}}Builder<C extends {{classname}}, B extends {{classname}}Builder<C, B>> {{#parent}}extends {{{.}}}Builder<C, B>{{/parent}} {
-    {{#vars}}
-    private {{{datatypeWithEnum}}} {{name}}{{#defaultValue}} = {{{.}}}{{/defaultValue}};
-    {{/vars}}
-  {{^parent}}
-    protected abstract B self();
-
-    public abstract C build();
-    {{/parent}}
-
-    {{#vars}}
-    public B {{name}}({{{datatypeWithEnum}}} {{name}}) {
-      this.{{name}} = {{name}};
-      return self();
-    }
-    {{/vars}}
-  }{{/additionalProperties}}{{/generateBuilders}}
 }
