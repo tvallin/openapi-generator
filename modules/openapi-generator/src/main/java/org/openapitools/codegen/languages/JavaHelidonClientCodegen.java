@@ -135,7 +135,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
     @Override
     public String getHelp() {
-        return "Generates a Helidon MP or SE client";
+        return "Generates a Helidon MP client";
     }
 
     @Override

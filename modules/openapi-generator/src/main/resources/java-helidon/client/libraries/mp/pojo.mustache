@@ -43,7 +43,7 @@ public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}}{{#vendorExtensi
   private {{{datatypeWithEnum}}} {{name}}{{#defaultValue}} = {{{.}}}{{/defaultValue}};
 {{/isContainer}}
   {{/vars}}
-{{#vendorExtensions.x-has-readonly-properties}}{{^withXml}}
+{{#vendorExtensions.x-has-readonly-properties}}{{#jsonb}}
   public {{classname}}() {
   }
 
@@ -57,7 +57,7 @@ public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}}{{#vendorExtensi
     this.{{name}} = {{name}};
   {{/readOnlyVars}}
   }
-  {{/withXml}}{{/vendorExtensions.x-has-readonly-properties}}
+  {{/jsonb}}{{/vendorExtensions.x-has-readonly-properties}}
   {{#vars}}
  /**
   {{#description}}
