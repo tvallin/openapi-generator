@@ -14,6 +14,10 @@ import {{rootJavaEEPackage}}.json.bind.annotation.JsonbProperty;
 import {{rootJavaEEPackage}}.json.bind.annotation.JsonbCreator;
 {{/vendorExtensions.x-has-readonly-properties}}
 {{/jsonb}}
+{{#jackson}}
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+{{/jackson}}
 
 {{#description}}
 /**

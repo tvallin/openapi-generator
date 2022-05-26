@@ -64,6 +64,7 @@ org.openapitools.codegen.languages.JavaVertXWebServerCodegen
 org.openapitools.codegen.languages.JavaCamelServerCodegen
 org.openapitools.codegen.languages.JavaCXFServerCodegen
 org.openapitools.codegen.languages.JavaCXFExtServerCodegen
+org.openapitools.codegen.languages.JavaHelidonServerCodegen
 org.openapitools.codegen.languages.JavaJAXRSCXFCDIServerCodegen
 org.openapitools.codegen.languages.JavaJerseyServerCodegen
 org.openapitools.codegen.languages.JavaResteasyServerCodegen
