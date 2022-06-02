@@ -59,7 +59,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         artifactId = "openapi-java-server";
         apiPackage = invokerPackage + ".api";
         modelPackage = invokerPackage + ".model";
-        parentVersion = "2.5.0";
         sourceFolder = "src" + File.separator + "main"+ File.separator + "java";
 
         // clioOptions default redefinition need to be updated
@@ -128,10 +127,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         }
         writePropertyBack(USE_BEANVALIDATION, useBeanValidation);
 
-        if (!additionalProperties.containsKey(CodegenConstants.PARENT_VERSION)) {
-            additionalProperties.put(CodegenConstants.PARENT_VERSION, parentVersion);
-        }
-
         importMapping.put("Handler", "io.helidon.webserver.Handler");
         importMapping.put("Map", "java.util.Map");
         importMapping.put("HashMap", "java.util.HashMap");
@@ -159,8 +154,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         }
 
         if (isLibrary(HELIDON_MP)) {
-            String apiExceptionFolder = (sourceFolder + File.separator
-                    + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
             String resourceFolder = "src" + File.separator + "main" + File.separator + "resources";
             String metaInfFolder = resourceFolder + File.separator + "META-INF";
             supportingFiles.add(new SupportingFile("RestApplication.mustache", invokerFolder, "RestApplication.java"));
@@ -168,7 +161,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
             supportingFiles.add(new SupportingFile("beans.xml.mustache", metaInfFolder, "beans.xml"));
         } else if (isLibrary(HELIDON_SE)) {
             artifactId = "openapi-helidon-se-server";
-            parentVersion = "2.5.0";
             supportingFiles.add(new SupportingFile("application.mustache",
                     ("src.main.resources").replace(".", java.io.File.separator), "application.yaml"));
             supportingFiles.add(new SupportingFile("mainTest.mustache",

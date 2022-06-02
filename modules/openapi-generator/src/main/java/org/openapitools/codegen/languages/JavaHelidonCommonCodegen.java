@@ -16,6 +16,7 @@
 
 package org.openapitools.codegen.languages;
 
+import org.openapitools.codegen.CodegenConstants;
 import org.openapitools.codegen.languages.features.BeanValidationFeatures;
 import org.openapitools.codegen.languages.features.PerformBeanValidationFeatures;
 
@@ -34,4 +35,57 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     static final String SERIALIZATION_LIBRARY_JACKSON = "jackson";
     static final String SERIALIZATION_LIBRARY_JSONB = "jsonb";
 
+    static final String HELIDON_VERSION = "helidonVersion";
+    static final String DEFAULT_HELIDON_VERSION = "2.5.2";
+
+    private String helidonVersion;
+
+    @Override
+    public void processOpts() {
+        super.processOpts();
+
+        String userHelidonVersion = "";
+        String userParentVersion = "";
+
+        if (additionalProperties.containsKey(CodegenConstants.PARENT_VERSION)) {
+            userParentVersion = additionalProperties.get(CodegenConstants.PARENT_VERSION).toString();
+        }
+
+        if (additionalProperties.containsKey(HELIDON_VERSION)) {
+            userHelidonVersion = additionalProperties.get(HELIDON_VERSION).toString();
+        }
+
+        //if only parentVersion is specified
+        if (userHelidonVersion.isEmpty() && !userParentVersion.isEmpty()) {
+            setHelidonVersion(userParentVersion);
+        }
+
+        //if only helidonVersion is specified
+        if (!userHelidonVersion.isEmpty() && userParentVersion.isEmpty()) {
+            setHelidonVersion(userHelidonVersion);
+        }
+
+        if (userHelidonVersion.equals(userParentVersion)) {
+            //if Both not specified
+            if (userHelidonVersion.isEmpty()) {
+                setHelidonVersion(DEFAULT_HELIDON_VERSION);
+            } else {
+                //if Both specified with same version
+                setHelidonVersion(userHelidonVersion);
+            }
+        }
+
+        if (!userHelidonVersion.equals(userParentVersion) && !userHelidonVersion.isEmpty() && !userParentVersion.isEmpty()) {
+            throw new IllegalArgumentException(
+                    String.format("Both %s and %s properties were set with different value.",
+                            CodegenConstants.PARENT_VERSION,
+                            HELIDON_VERSION));
+        }
+        additionalProperties.put(HELIDON_VERSION, helidonVersion);
+    }
+
+    private void setHelidonVersion(String version) {
+        helidonVersion = version;
+        setParentVersion(version);
+    }
 }
