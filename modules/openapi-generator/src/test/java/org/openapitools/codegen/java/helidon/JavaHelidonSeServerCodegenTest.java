@@ -38,7 +38,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGeneratePathParams() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .fileContains("import java.util.Objects;")
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
                       .bodyContainsLines(
@@ -59,7 +59,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGenerateQueryParams() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .fileContains("import java.util.List;")
                       .assertMethod("findPetsByTags")
                       .bodyContainsLines(
@@ -80,7 +80,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGenerateBodyParams() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("update")
                       .bodyContainsLines(
                               "rules.post(\"/pet\", Handler.create(Pet.class, this::addPet));",
@@ -99,7 +99,7 @@ public class JavaHelidonSeServerCodegenTest {
                               "handleUpdatePet(request, response, pet);"
                       );
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/UserService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/UserService.java"))
                       .assertMethod("update")
                       .bodyContainsLines(
                               "rules.post(\"/user\", Handler.create(User.class, this::createUser));",
@@ -128,7 +128,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGenerateHeaderParams() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
                       .bodyContainsLines(
                               "String apiKey = request.headers().value(\"api_key\").orElse(null);",
@@ -141,7 +141,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGenerateCookiesParams() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
                       .bodyContainsLines(
                               "String cookieString = request.headers().cookies().toMap().getOrDefault(\"cookieString\", List.of" +
@@ -160,7 +160,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGenerateFormParams() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("addPets", "ServerRequest", "ServerResponse")
                       .bodyContainsLines(
                               "Map<String, List<String>> nonFileFormContent = new HashMap<>();",
@@ -188,7 +188,7 @@ public class JavaHelidonSeServerCodegenTest {
     public void doGenerateParamsValidation() throws IOException {
         generator.generate();
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/PetService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("findPetsByStatus")
                       .bodyContainsLines(
                               "ValidatorUtils.checkNonNull(status);",
@@ -203,7 +203,7 @@ public class JavaHelidonSeServerCodegenTest {
                               "ValidatorUtils.checkNonNull(tags);"
                       );
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/api/UserService.java"))
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/UserService.java"))
                       .assertMethod("loginUser")
                       .bodyContainsLines(
                               "ValidatorUtils.validatePattern(username, \"^[a-zA-Z0-9]+[a-zA-Z0-9\\\\" +

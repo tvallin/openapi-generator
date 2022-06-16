@@ -112,6 +112,8 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
 
 
         supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
+        supportingFiles.add(new SupportingFile("build.gradle.mustache", "", "build.gradle"));
+        supportingFiles.add(new SupportingFile("settings.gradle.mustache", "", "settings.gradle"));
         supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
         supportingFiles.add(new SupportingFile("openapi.mustache",
                 ("src/main/resources/META-INF").replace("/", java.io.File.separator), "openapi.yml"));
