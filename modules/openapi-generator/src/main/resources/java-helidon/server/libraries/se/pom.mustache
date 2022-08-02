@@ -13,6 +13,9 @@
     <artifactId>{{{artifactId}}}</artifactId>
     <version>{{{artifactVersion}}}</version>
     <name>{{{artifactId}}}</name>
+    {{#appDescription}}
+    <description>{{.}}</description>
+    {{/appDescription}}
 
     <properties>
         <mainClass>{{{invokerPackage}}}.Main</mainClass>

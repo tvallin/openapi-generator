@@ -109,7 +109,7 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
     public void processOpts() {
         super.processOpts();
         supportingFiles.clear();
-
+        dateLibrary = "java8";
 
         supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
         supportingFiles.add(new SupportingFile("build.gradle.mustache", "", "build.gradle"));
@@ -167,7 +167,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
             supportingFiles.add(new SupportingFile("microprofile-config.properties.mustache", metaInfFolder, "microprofile-config.properties"));
             supportingFiles.add(new SupportingFile("beans.xml.mustache", metaInfFolder, "beans.xml"));
         } else if (isLibrary(HELIDON_SE)) {
-            dateLibrary = "legacy";
             artifactId = "openapi-helidon-se-server";
             parentVersion = "2.5.0";
             supportingFiles.add(new SupportingFile("application.mustache",
