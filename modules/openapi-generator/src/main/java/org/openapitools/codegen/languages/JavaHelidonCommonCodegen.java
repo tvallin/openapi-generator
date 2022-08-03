@@ -16,6 +16,8 @@
 
 package org.openapitools.codegen.languages;
 
+import java.util.Locale;
+
 import org.openapitools.codegen.CodegenConstants;
 import org.openapitools.codegen.languages.features.BeanValidationFeatures;
 import org.openapitools.codegen.languages.features.PerformBeanValidationFeatures;
@@ -58,7 +60,8 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
         if (!userHelidonVersion.isEmpty()) {
             if (!userParentVersion.isEmpty() && !userHelidonVersion.equals(userParentVersion)) {
                 throw new IllegalArgumentException(
-                        String.format("Both %s and %s properties were set with different value.",
+                        String.format(Locale.ROOT, 
+                                "Both %s and %s properties were set with different value.",
                                 CodegenConstants.PARENT_VERSION,
                                 HELIDON_VERSION));
             }
