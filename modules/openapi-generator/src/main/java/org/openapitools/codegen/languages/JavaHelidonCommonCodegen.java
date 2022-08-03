@@ -55,32 +55,20 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
             userHelidonVersion = additionalProperties.get(HELIDON_VERSION).toString();
         }
 
-        //if only parentVersion is specified
-        if (userHelidonVersion.isEmpty() && !userParentVersion.isEmpty()) {
-            setHelidonVersion(userParentVersion);
-        }
-
-        //if only helidonVersion is specified
-        if (!userHelidonVersion.isEmpty() && userParentVersion.isEmpty()) {
-            setHelidonVersion(userHelidonVersion);
-        }
-
-        if (userHelidonVersion.equals(userParentVersion)) {
-            //if Both not specified
-            if (userHelidonVersion.isEmpty()) {
-                setHelidonVersion(DEFAULT_HELIDON_VERSION);
-            } else {
-                //if Both specified with same version
-                setHelidonVersion(userHelidonVersion);
+        if (!userHelidonVersion.isEmpty()) {
+            if (!userParentVersion.isEmpty() && !userHelidonVersion.equals(userParentVersion)) {
+                throw new IllegalArgumentException(
+                        String.format("Both %s and %s properties were set with different value.",
+                                CodegenConstants.PARENT_VERSION,
+                                HELIDON_VERSION));
             }
+            setHelidonVersion(userHelidonVersion);
+        } else if (!userParentVersion.isEmpty()) {
+            setHelidonVersion(userParentVersion);
+        } else {
+            setHelidonVersion(DEFAULT_HELIDON_VERSION);
         }
 
-        if (!userHelidonVersion.equals(userParentVersion) && !userHelidonVersion.isEmpty() && !userParentVersion.isEmpty()) {
-            throw new IllegalArgumentException(
-                    String.format("Both %s and %s properties were set with different value.",
-                            CodegenConstants.PARENT_VERSION,
-                            HELIDON_VERSION));
-        }
         additionalProperties.put(HELIDON_VERSION, helidonVersion);
     }
 
