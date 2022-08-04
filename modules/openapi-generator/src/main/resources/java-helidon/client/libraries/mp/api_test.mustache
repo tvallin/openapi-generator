@@ -9,7 +9,6 @@ import org.junit.BeforeClass;
 import static org.junit.Assert.*;
 
 import org.eclipse.microprofile.rest.client.RestClientBuilder;
-import org.glassfish.jersey.media.multipart.*;
 
 import java.net.URL;
 import java.net.MalformedURLException;
@@ -58,7 +57,6 @@ public class {{classname}}Test {
     public void {{operationId}}Test() throws Exception {
         // TODO: test validations
         {{#allParams}}
-        {{^isFile}}{{{dataType}}} {{paramName}} = null;{{/isFile}}{{#isFile}}MultiPart {{paramName}} = null;{{/isFile}}
         {{/allParams}}
         //{{#returnType}}{{{.}}} response = {{/returnType}}client.{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
         //{{#returnType}}assertNotNull(response);{{/returnType}}
