@@ -68,29 +68,6 @@ function verify() {
 
       echo "========================================================================"
   done
-
-
-  echo "Generating project from ${apifile} ..."
-  if eval java -jar ${executable} generate -i ${apifile} -g ${1} -o ${project} > ${logfile} 2>&1; then
-    echo "Project generated successfully using ${1}"
-  else
-    echo "ERROR: Failed to run '${1}' generator. The command was:"
-    echo "java -jar ${executable} generate -i ${apifile} -g ${1} -o ${project}"
-    echo "ERROR: The output of the command was:"
-    cat ${logfile}
-    exit 1
-  fi
-
-  echo "Building generated project ..."
-  cd ${project} || exit 1
-  if eval mvn clean install -DskipTests; then
-    echo "Project compiled successfully"
-  else
-    echo "ERROR: Compiling project ${project}"
-    exit 2
-  fi
-
-  echo "Project location is ${project}"
 }
 
 if [ $# -gt 0 ];
