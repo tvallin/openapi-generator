@@ -39,14 +39,18 @@ dependencies {
     implementation "javax.validation:validation-api:${project.validationApiVersion}"
     implementation 'io.helidon.webserver:helidon-webserver'
     implementation 'io.helidon.media:helidon-media-jsonp'
+{{#jackson}}
+    implementation 'io.helidon.media:helidon-media-jackson'
+{{/jackson}}
+{{#jsonb}}
     implementation 'io.helidon.media:helidon-media-jsonb'
+{{/jsonb}}
     implementation 'io.helidon.media:helidon-media-multipart'
     implementation 'io.helidon.config:helidon-config-yaml'
     implementation 'io.helidon.health:helidon-health'
     implementation 'io.helidon.health:helidon-health-checks'
     implementation 'io.helidon.metrics:helidon-metrics'
     implementation 'io.helidon.openapi:helidon-openapi'
-    implementation 'org.glassfish.jersey.media:jersey-media-json-jackson'
     testImplementation 'org.junit.jupiter:junit-jupiter-api'
     testImplementation 'io.helidon.webclient:helidon-webclient'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'

@@ -5,8 +5,14 @@ import io.helidon.common.reactive.Single;
 import io.helidon.config.Config;
 import io.helidon.health.HealthSupport;
 import io.helidon.health.checks.HealthChecks;
-import io.helidon.media.jsonb.JsonbSupport;
 import io.helidon.media.jsonp.JsonpSupport;
+{{#jsonb}}
+import io.helidon.media.jsonb.JsonbSupport;
+{{/jsonb}}
+{{#jackson}}
+import io.helidon.media.jackson.JacksonSupport;
+import {{apiPackage}}.JsonProvider;
+{{/jackson}}
 import io.helidon.metrics.MetricsSupport;
 import io.helidon.openapi.OpenAPISupport;
 import io.helidon.webserver.Routing;
@@ -46,7 +52,12 @@ public final class Main {
         WebServer server = WebServer.builder(createRouting(config))
                                     .config(config.get("server"))
                                     .addMediaSupport(JsonpSupport.create())
+{{#jsonb}}
                                     .addMediaSupport(JsonbSupport.create())
+{{/jsonb}}
+{{#jackson}}
+                                    .addMediaSupport(JacksonSupport.create(JsonProvider.objectMapper()))
+{{/jackson}}
                                     .build();
 
         Single<WebServer> webserver = server.start();

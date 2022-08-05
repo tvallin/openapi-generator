@@ -38,10 +38,6 @@
         </dependency>
         <dependency>
             <groupId>io.helidon.media</groupId>
-            <artifactId>helidon-media-jsonb</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.helidon.media</groupId>
             <artifactId>helidon-media-multipart</artifactId>
         </dependency>
         <dependency>
@@ -66,18 +62,15 @@
         </dependency>
 {{#jackson}}
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-jackson</artifactId>
+            <groupId>io.helidon.media</groupId>
+            <artifactId>helidon-media-jackson</artifactId>
         </dependency>
 {{/jackson}}
 {{#jsonb}}
         <dependency>
-            <groupId>org.glassfish.jersey.media</groupId>
-            <artifactId>jersey-media-json-binding</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>jakarta.json.bind</groupId>
-            <artifactId>jakarta.json.bind-api</artifactId>
+            <groupId>io.helidon.media</groupId>
+            <artifactId>helidon-media-jsonb</artifactId>
+            <version>${helidon.version}</version>
         </dependency>
 {{/jsonb}}
         <dependency>

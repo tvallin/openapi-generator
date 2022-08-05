@@ -29,6 +29,7 @@ import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
 import org.openapitools.codegen.CodegenModel;
 import org.openapitools.codegen.CodegenOperation;
+import org.openapitools.codegen.CodegenProperty;
 import org.openapitools.codegen.CodegenType;
 import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.meta.features.DocumentationFeature;
@@ -138,6 +139,9 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         importMapping.put("UncheckedIOException", "java.io.UncheckedIOException");
         importMapping.put("IOException", "java.io.IOException");
         importMapping.put("ByteArrayInputStream", "java.io.ByteArrayInputStream");
+        importMapping.put("ObjectMapper", "com.fasterxml.jackson.databind.ObjectMapper");
+        importMapping.put("Jsonb", "javax.json.bind.Jsonb");
+        importMapping.put("JsonbBuilder", "javax.json.bind.JsonbBuilder");
 
         if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE_PROPERTY)) {
             additionalProperties.put(MICROPROFILE_ROOT_PACKAGE_PROPERTY, MICROPROFILE_REST_CLIENT_DEFAULT_ROOT_PACKAGE);
@@ -195,6 +199,11 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
                 additionalProperties.put(SERIALIZATION_LIBRARY_JACKSON, "true");
                 additionalProperties.remove(SERIALIZATION_LIBRARY_JSONB);
                 supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder, "RFC3339DateFormat.java"));
+                if (isLibrary(HELIDON_SE)) {
+                    supportingFiles.add(new SupportingFile("jsonProvider.mustache",
+                            (sourceFolder + File.separator + apiPackage).replace(".", java.io.File.separator),
+                            "JsonProvider.java"));
+                }
                 break;
             case SERIALIZATION_LIBRARY_JSONB:
                 additionalProperties.put(SERIALIZATION_LIBRARY_JSONB, "true");
@@ -212,6 +221,13 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
     public CodegenOperation fromOperation(String path, String httpMethod, Operation operation, List<Server> servers) {
         CodegenOperation codegenOperation = super.fromOperation(path, httpMethod, operation, servers);
         if (HELIDON_SE.equals(getLibrary())) {
+            if (additionalProperties.containsKey(JACKSON)){
+                codegenOperation.imports.add("ObjectMapper");
+            }
+            if (additionalProperties.containsKey(SERIALIZATION_LIBRARY_JSONB)){
+                codegenOperation.imports.add("Jsonb");
+                codegenOperation.imports.add("JsonbBuilder");
+            }
             if (codegenOperation.bodyParam != null) {
                 codegenOperation.imports.add("Handler");
             }
@@ -277,6 +293,19 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
             }
         }
         return objs;
+    }
+
+    @Override
+    public void postProcessModelProperty(CodegenModel model, CodegenProperty property) {
+        super.postProcessModelProperty(model, property);
+
+        if (Boolean.TRUE.equals(model.hasEnums)) {
+            // Add imports for Jackson
+            if (additionalProperties.containsKey(JACKSON)) {
+                model.imports.add("JsonValue");
+                model.imports.add("JsonCreator");
+            }
+        }
     }
 
     @Override

@@ -3,10 +3,7 @@ package {{package}};
 {{#imports}}import {{import}};
 {{/imports}}
 {{#models}}
-{{#model}}{{#description}}
-/**
- * {{{.}}}
- */{{/description}}{{#isEnum}}
+{{#model}}{{#isEnum}}
 {{>enumOuterClass}}{{/isEnum}}{{^isEnum}}
 {{>pojo}}{{/isEnum}}
 {{/model}}
