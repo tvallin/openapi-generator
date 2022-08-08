@@ -94,8 +94,6 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
         modelTestTemplateFiles.put("model_test.mustache", ".java");
 
-        cliOptions.add(CliOption.newBoolean(USE_BEANVALIDATION, "Use BeanValidation API annotations"));
-        cliOptions.add(CliOption.newBoolean(PERFORM_BEANVALIDATION, "Perform BeanValidation"));
         cliOptions.add(CliOption.newString(CONFIG_KEY, "Config key in @RegisterRestClient. Default to none."));
 
         supportedLibraries.put(HELIDON_MP, "Helidon MP Client");
@@ -163,24 +161,11 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             setConfigKey(additionalProperties.get(CONFIG_KEY).toString());
         }
 
-        if (additionalProperties.containsKey(USE_BEANVALIDATION)) {
-            setUseBeanValidation(convertPropertyToBooleanAndWriteBack(USE_BEANVALIDATION));
-        }
-
-        if (additionalProperties.containsKey(PERFORM_BEANVALIDATION)) {
-            setPerformBeanValidation(convertPropertyToBooleanAndWriteBack(PERFORM_BEANVALIDATION));
-        }
-
         String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
         authFolder = (sourceFolder + '/' + invokerPackage + ".auth").replace(".", "/");
 
         if (additionalProperties.containsKey("jsr310") && isLibrary(HELIDON_MP)) {
             supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache", invokerFolder, "JavaTimeFormatter.java"));
-        }
-
-        if (performBeanValidation) {
-            supportingFiles.add(new SupportingFile("BeanValidationException.mustache", invokerFolder,
-                    "BeanValidationException.java"));
         }
 
         if (isLibrary(HELIDON_MP)) {
