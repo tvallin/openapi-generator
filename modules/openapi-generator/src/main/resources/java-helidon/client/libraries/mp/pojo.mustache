@@ -83,7 +83,7 @@ public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}}{{#vendorExtensi
 {{#vendorExtensions.x-extra-annotation}}
   {{{vendorExtensions.x-extra-annotation}}}
 {{/vendorExtensions.x-extra-annotation}}
-{{#useBeanValidation}}{{>beanValidation}}{{/useBeanValidation}}  {{#withXml}}{{#isEnum}}{{^isArray}}{{^isMap}}public {{dataType}} {{getter}}() {
+  {{#withXml}}{{#isEnum}}{{^isArray}}{{^isMap}}public {{dataType}} {{getter}}() {
     if ({{name}} == null) {
       return null;
     }
