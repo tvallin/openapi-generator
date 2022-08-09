@@ -194,6 +194,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
                 supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder, "RFC3339DateFormat.java"));
                 break;
             case SERIALIZATION_LIBRARY_JSONB:
+                openApiNullable = false;        // for Jackson only
                 additionalProperties.put(SERIALIZATION_LIBRARY_JSONB, "true");
                 additionalProperties.remove(SERIALIZATION_LIBRARY_JACKSON);
                 break;

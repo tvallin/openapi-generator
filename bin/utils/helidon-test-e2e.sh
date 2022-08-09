@@ -40,11 +40,11 @@ function verify() {
 
   for apifile in ${!apifiles}
   do
-      echo "Generating project for ${apifile} ..."
+      echo "Generating project for ${apifile} using ${3} ..."
 
       ls ${project} >/dev/null 2>&1 && rm -rf ${project}
 
-      if eval java -jar ${executable} generate --input-spec ${apifile} --generator-name ${1} --library ${2} -o ${project} > ${logfile} 2>&1; then
+      if eval java -jar ${executable} generate --input-spec ${apifile} --generator-name ${1} --library ${2} --additional-properties="serializationLibrary=${3}" -o ${project} > ${logfile} 2>&1; then
         echo "Project generated successfully using ${1} ${2}"
         cp ${apifile} ${project}
       else
@@ -58,7 +58,7 @@ function verify() {
 
       echo "Building generated project ..."
       cd ${project} || exit 1
-      if eval mvn clean package -DskipTests; then
+      if eval mvn clean package; then
         echo "Project compiled successfully"
       else
         echo "ERROR: Compiling project ${project}"
@@ -87,9 +87,10 @@ then
     if [ "$library" != "mp" ] && [ "$library" != "se" ];
     then
       help
-   fi
-  verify "$generator" "$library"
-  exit 0
+    fi
+   verify "$generator" "$library" "jackson"
+   verify "$generator" "$library" "jsonb"
+   exit 0
   fi
 fi
 
