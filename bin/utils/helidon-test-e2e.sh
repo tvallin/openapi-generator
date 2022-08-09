@@ -21,9 +21,17 @@ modules/openapi-generator/src/test/resources/3_0/helidon/petstore-for-testing.ya
 
 # E2E testing for Client MP
 java_helidon_client_mp="
+modules/openapi-generator/src/test/resources/3_0/petstore-multiple-required-properties-has-same-oneOf-object.yaml
+modules/openapi-generator/src/test/resources/3_0/petstore-with-complex-headers.yaml
+modules/openapi-generator/src/test/resources/3_0/petstore-with-depreacted-fields.yaml
+modules/openapi-generator/src/test/resources/3_0/petstore-with-fake-endpoints-models-for-testing-with-http-signature.yaml
 modules/openapi-generator/src/test/resources/3_0/petstore-with-fake-endpoints-models-for-testing.yaml
-modules/openapi-generator/src/test/resources/3_0/helidon/petstore-no-multipart-for-testing.yaml
-"
+modules/openapi-generator/src/test/resources/3_0/petstore-with-nullable-required.yaml
+modules/openapi-generator/src/test/resources/3_0/petstore.yaml
+modules/openapi-generator/src/test/resources/3_0/petstore_oas3_test.yaml
+modules/openapi-generator/src/test/resources/3_0/helidon/petstore-no-multipart-for-testing.yaml"
+
+#modules/openapi-generator/src/test/resources/3_0/petstore-with-object-as-parameter.yaml
 
 # E2E testing for Client SE
 java_helidon_client_se="
@@ -40,11 +48,11 @@ function verify() {
 
   for apifile in ${!apifiles}
   do
-      echo "Generating project for ${apifile} ..."
+      echo "Generating project for ${apifile} using ${3} ..."
 
       ls ${project} >/dev/null 2>&1 && rm -rf ${project}
 
-      if eval java -jar ${executable} generate --input-spec ${apifile} --generator-name ${1} --library ${2} -o ${project} > ${logfile} 2>&1; then
+      if eval java -jar ${executable} generate --skip-validate-spec --input-spec ${apifile} --generator-name ${1} --library ${2} --additional-properties="serializationLibrary=${3}" -o ${project} > ${logfile} 2>&1; then
         echo "Project generated successfully using ${1} ${2}"
         cp ${apifile} ${project}
       else
@@ -58,7 +66,7 @@ function verify() {
 
       echo "Building generated project ..."
       cd ${project} || exit 1
-      if eval mvn clean package -DskipTests; then
+      if eval mvn clean package; then
         echo "Project compiled successfully"
       else
         echo "ERROR: Compiling project ${project}"
@@ -87,9 +95,10 @@ then
     if [ "$library" != "mp" ] && [ "$library" != "se" ];
     then
       help
-   fi
-  verify "$generator" "$library"
-  exit 0
+    fi
+   verify "$generator" "$library" "jackson"
+   verify "$generator" "$library" "jsonb"
+   exit 0
   fi
 fi
 
