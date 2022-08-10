@@ -19,8 +19,10 @@ tasks.withType(JavaCompile) {
 }
 
 ext {
-    helidonVersion = '{{{parentVersion}}}'
+    helidonVersion = '{{{helidonVersion}}}'
+{{^interfaceOnly}}
     mainClass='{{{invokerPackage}}}.Main'
+{{/interfaceOnly}}
     validationApiVersion = '2.0.1.Final'
 }
 
@@ -74,12 +76,13 @@ assemble.dependsOn copyLibs
 jar {
     archiveFileName = "${project.name}.jar"
     manifest {
-        attributes ('Main-Class': "${project.mainClass}",
+        attributes ({{^interfaceOnly}}'Main-Class': "${project.mainClass}",{{/interfaceOnly}}
                 'Class-Path': configurations.runtimeClasspath.files.collect { "libs/$it.name" }.join(' ')
         )
     }
 }
-
+{{^interfaceOnly}}
 application {
 mainClass = "${project.mainClass}"
 }
+{{/interfaceOnly}}

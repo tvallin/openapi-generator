@@ -4,9 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.openapitools.codegen.ClientOptInput;
 import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.TestUtils;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.openapitools.codegen.java.assertions.JavaFileAssert;
 import org.testng.annotations.BeforeMethod;
@@ -35,11 +38,33 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
+    public void doGenerateInterfaceOnly() {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("interfaceOnly", true);
+        final CodegenConfigurator configurator = new CodegenConfigurator()
+                .setGeneratorName("java-helidon-server")
+                .setLibrary("se")
+                .setAdditionalProperties(additionalProperties)
+                .setInputSpec("src/test/resources/3_0/helidon/petstore-for-testing.yaml")
+                .setOutputDir(outputPath);
+        generator.opts(configurator.toClientOptInput()).generate();
+
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
+                      .fileContains(
+                              "public interface PetService extends Service",
+                              "default void update(Routing.Rules rules)",
+                              "void deletePet(ServerRequest request, ServerResponse response);"
+                      );
+        TestUtils.assertFileNotExists(Paths.get(outputPath + "/src/main/java/org/openapitools/server/Main.java"));
+        TestUtils.assertFileNotContains(Paths.get(outputPath + "/pom.xml"), "<mainClass>org.openapitools.server" +
+                ".Main</mainClass>");
+    }
+
+    @Test
     public void doGeneratePathParams() throws IOException {
         generator.generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
-                      .fileContains("import java.util.Objects;")
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
                       .bodyContainsLines(
                               "Long petId = Optional.ofNullable(request.path().param(\"petId\")).map(Long::valueOf).orElse" +
@@ -64,9 +89,9 @@ public class JavaHelidonSeServerCodegenTest {
                       .assertMethod("findPetsByTags")
                       .bodyContainsLines(
                               "List<String> tags = Optional.ofNullable(request.queryParams().toMap().get(\"tags\"))" +
-                              ".orElse(null);",
+                                      ".orElse(null);",
                               "ValidatorUtils.checkNonNull(tags);"
-                              )
+                      )
                       .toFileAssert()
                       .assertMethod("findPetsByStatus")
                       .bodyContainsLines(
