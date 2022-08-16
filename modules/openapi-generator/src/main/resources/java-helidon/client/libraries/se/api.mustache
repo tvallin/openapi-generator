@@ -7,8 +7,12 @@ import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.function.Consumer;
 
-{{#jsonb}}import jakarata.json.bind.JsonbBuilder;{{/jsonb}}
-{{#jackson}}import com.fasterxml.jackson.databind.ObjectMapper;{{/jackson}}
+{{#jsonb}}
+import {{rootJavaEEPackage}}.json.bind.JsonbBuilder;
+{{/jsonb}}
+{{#jackson}}
+import com.fasterxml.jackson.databind.ObjectMapper;
+{{/jackson}}
 
 import io.helidon.common.http.MediaType;
 import io.helidon.common.reactive.Single;
