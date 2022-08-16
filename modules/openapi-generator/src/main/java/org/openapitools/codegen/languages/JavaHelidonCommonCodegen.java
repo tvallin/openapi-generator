@@ -18,6 +18,7 @@ package org.openapitools.codegen.languages;
 
 import java.util.Locale;
 
+import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
 import org.openapitools.codegen.languages.features.BeanValidationFeatures;
 import org.openapitools.codegen.languages.features.PerformBeanValidationFeatures;
@@ -39,8 +40,14 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
 
     static final String HELIDON_VERSION = "helidonVersion";
     static final String DEFAULT_HELIDON_VERSION = "2.5.2";
+    static final String HELIDON_VERSION_DESC = "Helidon version for generated code";
 
     private String helidonVersion;
+
+    public JavaHelidonCommonCodegen() {
+        super();
+        cliOptions.add(new CliOption(HELIDON_VERSION, HELIDON_VERSION_DESC).defaultValue(DEFAULT_HELIDON_VERSION));
+    }
 
     @Override
     public void processOpts() {

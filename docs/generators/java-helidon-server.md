@@ -7,11 +7,11 @@ title: Documentation for the java-helidon-server Generator
 | Property | Value | Notes |
 | -------- | ----- | ----- |
 | generator name | java-helidon-server | pass this to the generate command after -g |
-| generator stability | BETA | |
+| generator stability | STABLE | |
 | generator type | SERVER | |
 | generator language | Java | |
 | generator default templating engine | mustache | |
-| helpTxt | Generates a Helidon MP or SE server. | |
+| helpTxt | Generates a Java Helidon Server application. | |
 
 ## CONFIG OPTIONS
 These options may be applied as additional-properties (cli) or configOptions (plugins). Refer to [configuration docs](https://openapi-generator.tech/docs/configuration) for more details.
@@ -28,7 +28,7 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |artifactVersion|artifact version in generated pom.xml. This also becomes part of the generated library's filename| |1.0.0|
 |bigDecimalAsString|Treat BigDecimal values as Strings to avoid precision loss.| |false|
 |booleanGetterPrefix|Set booleanGetterPrefix| |get|
-|dateLibrary|Option. Date library to use|<dl><dt>**legacy**</dt><dd>Legacy java.util.Date</dd><dt>**java8-localdatetime**</dt><dd>Java 8 using LocalDateTime (for legacy app only)</dd><dt>**java8**</dt><dd>Java 8 native JSR310 (preferred for jdk 1.8+)</dd></dl>|java8|
+|dateLibrary|Option. Date library to use|<dl><dt>**joda**</dt><dd>Joda (for legacy app only)</dd><dt>**legacy**</dt><dd>Legacy java.util.Date</dd><dt>**java8-localdatetime**</dt><dd>Java 8 using LocalDateTime (for legacy app only)</dd><dt>**java8**</dt><dd>Java 8 native JSR310 (preferred for jdk 1.8+)</dd></dl>|java8|
 |developerEmail|developer email in generated pom.xml| |team@openapitools.org|
 |developerName|developer name in generated pom.xml| |OpenAPI-Generator Contributors|
 |developerOrganization|developer organization in generated pom.xml| |OpenAPITools.org|
@@ -40,34 +40,34 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |enumUnknownDefaultCase|If the server adds new enum cases, that are unknown by an old spec/client, the client will fail to parse the network response.With this option enabled, each enum will have a new case, 'unknown_default_open_api', so that when the server sends an enum case that is not known by the client/spec, they can safely fallback to this case.|<dl><dt>**false**</dt><dd>No changes to the enum's are made, this is the default option.</dd><dt>**true**</dt><dd>With this option enabled, each enum will have a new case, 'unknown_default_open_api', so that when the enum case sent by the server is not known by the client/spec, can safely be decoded to this case.</dd></dl>|false|
 |fullJavaUtil|whether to use fully qualified name for classes under java.util. This option only works for Java API client| |false|
 |groupId|groupId in generated pom.xml| |org.openapitools|
+|helidonVersion|Helidon version for generated code| |2.5.2|
 |hideGenerationTimestamp|Hides the generation timestamp when files are generated.| |false|
 |ignoreAnyOfInEnum|Ignore anyOf keyword in enum| |false|
 |implicitHeaders|Skip header parameters in the generated API methods using @ApiImplicitParams annotation.| |false|
 |implicitHeadersRegex|Skip header parameters that matches given regex in the generated API methods using @ApiImplicitParams annotation. Note: this parameter is ignored when implicitHeaders=true| |null|
-|interfaceOnly|Whether to generate only API interface stubs without the server files.| |false|
-|invokerPackage|root package for generated code| |org.openapitools.api|
+|invokerPackage|root package for generated code| |org.openapitools.server|
 |legacyDiscriminatorBehavior|Set to false for generators with better support for discriminators. (Python, Java, Go, PowerShell, C#have this enabled by default).|<dl><dt>**true**</dt><dd>The mapping in the discriminator includes descendent schemas that allOf inherit from self and the discriminator mapping schemas in the OAS document.</dd><dt>**false**</dt><dd>The mapping in the discriminator includes any descendent schemas that allOf inherit from self, any oneOf schemas, any anyOf schemas, any x-discriminator-values, and the discriminator mapping schemas in the OAS document AND Codegen validates that oneOf and anyOf schemas contain the required discriminator and throws an error if the discriminator is missing.</dd></dl>|true|
-|library|library template (sub-template)|<dl><dt>**mp**</dt><dd>Helidon MP Server application.</dd><dt>**se**</dt><dd>Helidon SE Server application.</dd></dl>|se|
+|library|library template (sub-template) to use|<dl><dt>**mp**</dt><dd>Helidon MP Server</dd><dt>**se**</dt><dd>Helidon SE Server</dd><dt>**nima**</dt><dd>Helidon NIMA Server</dd><dt>**nima-annotations**</dt><dd>Helidon NIMA Annotations Server</dd></dl>|se|
 |licenseName|The name of the license| |Unlicense|
 |licenseUrl|The URL of the license| |http://unlicense.org|
 |modelPackage|package for generated models| |org.openapitools.server.model|
 |openApiNullable|Enable OpenAPI Jackson Nullable library| |true|
 |parentArtifactId|parent artifactId in generated pom N.B. parentGroupId, parentArtifactId and parentVersion must all be specified for any of them to take effect| |null|
 |parentGroupId|parent groupId in generated pom N.B. parentGroupId, parentArtifactId and parentVersion must all be specified for any of them to take effect| |null|
-|parentVersion|parent version in generated pom N.B. parentGroupId, parentArtifactId and parentVersion must all be specified for any of them to take effect| |2.5.0|
-|performBeanValidation|Use Bean Validation Impl. to perform BeanValidation| |false|
+|parentVersion|parent version in generated pom N.B. parentGroupId, parentArtifactId and parentVersion must all be specified for any of them to take effect| |null|
+|performBeanValidation|Perform BeanValidation| |false|
 |prependFormOrBodyParameters|Add form or body parameters to the beginning of the parameter list.| |false|
 |scmConnection|SCM connection in generated pom.xml| |scm:git:git@github.com:openapitools/openapi-generator.git|
 |scmDeveloperConnection|SCM developer connection in generated pom.xml| |scm:git:git@github.com:openapitools/openapi-generator.git|
 |scmUrl|SCM URL in generated pom.xml| |https://github.com/openapitools/openapi-generator|
 |serializableModel|boolean - toggle &quot;implements Serializable&quot; for generated models| |false|
-|serializationLibrary|Serialization library, defaults to Jackson|<dl><dt>**jsonb**</dt><dd>Use JSON-B as serialization library</dd><dt>**jackson**</dt><dd>Use Jackson as serialization library</dd></dl>|jackson|
+|serializationLibrary|Serialization library, defaults to Jackson|<dl><dt>**jsonb**</dt><dd>Use JSON-B as serialization library</dd><dt>**jackson**</dt><dd>Use Jackson as serialization library</dd></dl>|null|
 |snapshotVersion|Uses a SNAPSHOT version.|<dl><dt>**true**</dt><dd>Use a SnapShot Version</dd><dt>**false**</dt><dd>Use a Release Version</dd></dl>|null|
 |sortModelPropertiesByRequiredFlag|Sort model properties to place required parameters before optional parameters.| |true|
 |sortParamsByRequiredFlag|Sort method arguments to place required parameters before optional parameters.| |true|
 |sourceFolder|source folder for generated code| |src/main/java|
 |testOutput|Set output folder for models and APIs tests| |${project.build.directory}/generated-test-sources/openapi|
-|useBeanValidation|Use BeanValidation API annotations| |true|
+|useBeanValidation|Use Bean Validation| |false|
 |withXml|whether to include support for application/xml content type and include XML annotations in the model (works with libraries that provide support for JSON and XML)| |false|
 
 ## SUPPORTED VENDOR EXTENSIONS
@@ -82,7 +82,6 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |x-content-type|Specify custom value for 'Content-Type' header for operation|OPERATION|null
 |x-class-extra-annotation|List of custom annotations to be added to model|MODEL|null
 |x-field-extra-annotation|List of custom annotations to be added to property|FIELD|null
-|x-webclient-blocking|Specifies if method for specific operation should be blocking or non-blocking(ex: return `Mono<T>/Flux<T>` or `return T/List<T>/Set<T>` & execute `.block()` inside generated method)|OPERATION|false
 
 
 ## IMPORT MAPPING
@@ -93,12 +92,14 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |ArrayList|java.util.ArrayList|
 |BigDecimal|java.math.BigDecimal|
 |Date|java.util.Date|
+|DateTime|org.joda.time.*|
 |File|java.io.File|
 |HashMap|java.util.HashMap|
 |LinkedHashSet|java.util.LinkedHashSet|
 |List|java.util.*|
-|LocalDate|java.time.LocalDate|
-|OffsetDateTime|java.time.OffsetDateTime|
+|LocalDate|org.joda.time.*|
+|LocalDateTime|org.joda.time.*|
+|LocalTime|org.joda.time.*|
 |Map|java.util.Map|
 |Set|java.util.*|
 |Timestamp|java.sql.Timestamp|
@@ -273,9 +274,9 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |Produces|✓|OAS2
 |ExternalDocumentation|✓|OAS2,OAS3
 |Examples|✓|OAS2,OAS3
-|XMLStructureDefinitions|x|OAS2,OAS3
+|XMLStructureDefinitions|✗|OAS2,OAS3
 |MultiServer|✗|OAS3
-|ParameterizedServer|✓|OAS3
+|ParameterizedServer|✗|OAS3
 |ParameterStyling|✗|OAS3
 |Callbacks|✗|OAS3
 |LinkObjects|✗|OAS3
@@ -296,7 +297,7 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 | ---- | --------- | ---------- |
 |Simple|✓|OAS2,OAS3
 |Composite|✓|OAS2,OAS3
-|Polymorphism|x|OAS2,OAS3
+|Polymorphism|✗|OAS2,OAS3
 |Union|✗|OAS3
 |allOf|✗|OAS2,OAS3
 |anyOf|✗|OAS3
@@ -321,4 +322,4 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |JSON|✓|OAS2,OAS3
 |XML|✓|OAS2,OAS3
 |PROTOBUF|✗|ToolingExtension
-|Custom|x|OAS2,OAS3
+|Custom|✗|OAS2,OAS3

@@ -133,7 +133,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
     @Override
     public String getHelp() {
-        return "Generates a Helidon MP client";
+        return "Generates a Helidon MP or SE client";
     }
 
     @Override
@@ -177,7 +177,12 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             supportingFiles.add(new SupportingFile("api_exception.mustache", apiExceptionFolder, "ApiException.java"));
             supportingFiles.add(new SupportingFile("api_exception_mapper.mustache", apiExceptionFolder, "ApiExceptionMapper.java"));
         } else if (isLibrary(HELIDON_SE)) {
-            throw new UnsupportedOperationException("Not implemented");
+            // TODO check for SE-specifics and supporting files used for both MP and SE
+            supportingFiles.clear();
+            supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
+            supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
+            supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder, "ApiClient.java"));
+            supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder, "Pair.java"));
         }
         else {
             LOGGER.error("Unknown library option (-l/--library): {}", getLibrary());
@@ -212,7 +217,9 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         if (HELIDON_MP.equals(getLibrary())) {
             return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         } else {
-            throw new UnsupportedOperationException("Not implemented");
+            // TODO What do we do for SE clients?
+            LOGGER.warn("Might need SE-specific code here");
+            return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         }
     }
 
@@ -242,7 +249,11 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             model.imports.remove("JsonSerialize");
             model.imports.remove("ToStringSerializer");
         } else if (HELIDON_SE.equals(getLibrary())) {
-            throw new UnsupportedOperationException("Not implemented");
+            // TODO check for SE-specifics
+            model.imports.remove("ApiModelProperty");
+            model.imports.remove("ApiModel");
+            model.imports.remove("JsonSerialize");
+            model.imports.remove("ToStringSerializer");
         }
 
         if ("set".equals(property.containerType) && !JACKSON.equals(serializationLibrary)) {
@@ -256,6 +267,11 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     public CodegenModel fromModel(String name, Schema model) {
         CodegenModel codegenModel = super.fromModel(name, model);
         if (HELIDON_MP.equals(getLibrary())) {
+            if (codegenModel.imports.contains("ApiModel")) {
+                // Remove io.swagger.annotations.ApiModel import
+                codegenModel.imports.remove("ApiModel");
+            }
+        } else if (HELIDON_SE.equals(getLibrary())) {
             if (codegenModel.imports.contains("ApiModel")) {
                 // Remove io.swagger.annotations.ApiModel import
                 codegenModel.imports.remove("ApiModel");
