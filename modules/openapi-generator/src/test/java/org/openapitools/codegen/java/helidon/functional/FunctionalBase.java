@@ -16,10 +16,6 @@
 
 package org.openapitools.codegen.java.helidon.functional;
 
-import org.openapitools.codegen.DefaultGenerator;
-import org.openapitools.codegen.config.CodegenConfigurator;
-import org.testng.SkipException;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -40,7 +36,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.config.CodegenConfigurator;
+import org.testng.SkipException;
+
 import static java.util.Objects.requireNonNull;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 abstract class FunctionalBase {
 
@@ -94,6 +97,12 @@ abstract class FunctionalBase {
     protected void generate() {
         generate(createConfigurator());
     }
+
+    protected void generate(String inputSpec) {
+        inputSpec(inputSpec);
+        generate(createConfigurator());
+    }
+
 
     protected void generatorName(String generatorName) {
         this.generatorName = generatorName;
@@ -231,6 +240,22 @@ abstract class FunctionalBase {
             LOGGER.log(Level.WARNING, message);
             throw new SkipException(message);
         }
+    }
+
+    /**
+     * Convenience method to build project using Maven and verify test output.
+     *
+     * @param jarPath path to expected jar file
+     */
+    protected void buildAndVerify(String jarPath) {
+        ProcessReader reader = runMavenProcessAndWait("package");
+        Path executableJar = outputPath.resolve(jarPath);
+        String output = reader.readOutputConsole();
+        assertThat(output, containsString("BUILD SUCCESS"));
+        assertThat(output, containsString("Errors: 0"));
+        assertThat(output, containsString("Failures: 0"));
+        assertThat(output, containsString("Skipped: 0"));
+        assertThat(Files.exists(executableJar), is(true));
     }
 
     /**
