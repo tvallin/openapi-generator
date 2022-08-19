@@ -46,6 +46,8 @@ import org.openapitools.codegen.model.OperationsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.openapitools.codegen.CodegenConstants.SERIALIZATION_LIBRARY;
+
 public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JavaHelidonClientCodegen.class);
@@ -106,7 +108,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(libraryOption);
         setLibrary(HELIDON_MP);     // default
 
-        CliOption serializationLibrary = new CliOption(CodegenConstants.SERIALIZATION_LIBRARY,
+        CliOption serializationLibrary = new CliOption(SERIALIZATION_LIBRARY,
                 "Serialization library, defaults to Jackson");
         Map<String, String> serializationOptions = new HashMap<>();
         serializationOptions.put(SERIALIZATION_LIBRARY_JACKSON, "Use Jackson as serialization library");
@@ -149,12 +151,12 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     public void processOpts() {
         super.processOpts();
 
-        if (!additionalProperties.containsKey("rootJavaEEPackage")) {
-            additionalProperties.put("rootJavaEEPackage", rootJavaEEPackage);
+        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE_PROPERTY)) {
+            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE_PROPERTY, rootJavaEEPackage);
         }
 
-        if (additionalProperties.containsKey(CodegenConstants.SERIALIZATION_LIBRARY)) {
-            setSerializationLibrary(additionalProperties.get(CodegenConstants.SERIALIZATION_LIBRARY).toString());
+        if (additionalProperties.containsKey(SERIALIZATION_LIBRARY)) {
+            setSerializationLibrary(additionalProperties.get(SERIALIZATION_LIBRARY).toString());
         }
 
         if (additionalProperties.containsKey(CONFIG_KEY)) {
@@ -164,18 +166,17 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
         authFolder = (sourceFolder + '/' + invokerPackage + ".auth").replace(".", "/");
 
-        if (additionalProperties.containsKey("jsr310") && isLibrary(HELIDON_MP)) {
-            supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache", invokerFolder, "JavaTimeFormatter.java"));
-        }
-
         if (isLibrary(HELIDON_MP)) {
-            supportingFiles.clear();
             String apiExceptionFolder = (sourceFolder + File.separator
                     + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
             supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
             supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
             supportingFiles.add(new SupportingFile("api_exception.mustache", apiExceptionFolder, "ApiException.java"));
             supportingFiles.add(new SupportingFile("api_exception_mapper.mustache", apiExceptionFolder, "ApiExceptionMapper.java"));
+
+            if (additionalProperties.containsKey("jsr310")) {
+                supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache", invokerFolder, "JavaTimeFormatter.java"));
+            }
         } else if (isLibrary(HELIDON_SE)) {
             // TODO check for SE-specifics and supporting files used for both MP and SE
             supportingFiles.clear();
@@ -214,18 +215,13 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     @Override
     public OperationsMap postProcessOperationsWithModels(OperationsMap objs, List<ModelMap> allModels) {
         super.postProcessOperationsWithModels(objs, allModels);
-        if (HELIDON_MP.equals(getLibrary())) {
+        if (isLibrary(HELIDON_MP)) {
             return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         } else {
             // TODO What do we do for SE clients?
             LOGGER.warn("Might need SE-specific code here");
             return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         }
-    }
-
-    @Override
-    public String apiFilename(String templateName, String tag) {
-        return super.apiFilename(templateName, tag);
     }
 
     @Override
@@ -266,12 +262,12 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     @Override
     public CodegenModel fromModel(String name, Schema model) {
         CodegenModel codegenModel = super.fromModel(name, model);
-        if (HELIDON_MP.equals(getLibrary())) {
+        if (isLibrary(HELIDON_MP)) {
             if (codegenModel.imports.contains("ApiModel")) {
                 // Remove io.swagger.annotations.ApiModel import
                 codegenModel.imports.remove("ApiModel");
             }
-        } else if (HELIDON_SE.equals(getLibrary())) {
+        } else if (isLibrary(HELIDON_SE)) {
             if (codegenModel.imports.contains("ApiModel")) {
                 // Remove io.swagger.annotations.ApiModel import
                 codegenModel.imports.remove("ApiModel");
