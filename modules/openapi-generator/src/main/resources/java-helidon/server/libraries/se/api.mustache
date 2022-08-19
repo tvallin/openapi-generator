@@ -18,14 +18,15 @@ import io.helidon.webserver.Service;
 
 {{#operations}}
 {{#interfaceOnly}}public interface {{classname}} extends Service { {{/interfaceOnly}}
-{{^interfaceOnly}}public abstract class {{classname}} implements Service { {{/interfaceOnly}}
+{{^interfaceOnly}}public {{^fullProject}}abstract {{/fullProject}}class {{classname}} implements Service { {{/interfaceOnly}}
 {{^interfaceOnly}}
 
     protected static final Logger LOGGER = Logger.getLogger({{classname}}.class.getName());
 {{#jackson}}
     private static final ObjectMapper MAPPER = JsonProvider.objectMapper();{{/jackson}}
 {{#jsonb}}
-    private static final Jsonb JSONB = JsonbBuilder.create();{{/jsonb}}
+    private static final Jsonb JSONB = JsonbBuilder.create();{{/jsonb}}{{#fullProject}}
+    private static final int HTTP_CODE_NOT_IMPLEMENTED = 501;{{/fullProject}}
     protected final Config config;
 
     public {{classname}}(Config config) {
@@ -62,11 +63,13 @@ import io.helidon.webserver.Service;
         Single.create({{^hasParams}}Single.empty(){{/hasParams}}{{#hasParams}}{{^bodyParam}}{{#formParams}}{{#-first}}formSingle{{/-first}}{{/formParams}}{{^formParams}}Single.empty(){{/formParams}}{{/bodyParam}}{{#bodyParam}}{{^isModel}}request.content().as(new GenericType<{{{dataType}}}>() { }){{/isModel}}{{#isModel}}Single.empty(){{/isModel}}{{/bodyParam}}{{/hasParams}})
             .thenAccept({{#bodyParam}}{{^isModel}}{{paramName}}{{/isModel}}{{#isModel}}val{{/isModel}}{{/bodyParam}}{{^bodyParam}}val{{/bodyParam}} -> {
                 {{#allParams}}{{> queryParams }}{{> pathParams }}{{>headerParams}}{{>bodyParams}}{{>formParams}}{{>cookieParams}}
-                {{/allParams}}handle{{#lambda.titlecase}}{{{operationId}}}{{/lambda.titlecase}}(request, response{{#allParams}}, {{paramName}}{{/allParams}});
+                {{/allParams}}{{^fullProject}}
+                handle{{#lambda.titlecase}}{{{operationId}}}{{/lambda.titlecase}}(request, response{{#allParams}}, {{paramName}}{{/allParams}});{{/fullProject}}{{#fullProject}}
+                response.status(HTTP_CODE_NOT_IMPLEMENTED).send();{{/fullProject}}
             })
-            .exceptionally(throwable -> handleError(request, response, throwable));
+            .exceptionally({{^fullProject}}throwable -> handleError(request, response, throwable){{/fullProject}}{{#fullProject}}response::send{{/fullProject}});
     }
-
+{{^fullProject}}
     /**
      * Handle {{httpMethod}} {{{path}}}{{#summary}} : {{.}}{{/summary}}.
      * @param request the server request
@@ -74,10 +77,10 @@ import io.helidon.webserver.Service;
      * @param {{paramName}} {{{description}}}{{^description}}{{paramName}}{{/description}} {{/allParams}}
      */
     abstract void handle{{#lambda.titlecase}}{{{operationId}}}{{/lambda.titlecase}}(ServerRequest request, ServerResponse response{{#allParams}}, {{>dataType}} {{paramName}}{{/allParams}});
-{{/interfaceOnly}}
+{{/fullProject}}{{/interfaceOnly}}
 
 {{/operation}}
-{{^interfaceOnly}}    abstract Void handleError(ServerRequest request, ServerResponse response, Throwable throwable);{{!
-}}{{/interfaceOnly}}
+{{^interfaceOnly}}{{^fullProject}}    abstract Void handleError(ServerRequest request, ServerResponse response, Throwable throwable);{{!
+}}{{/fullProject}}{{/interfaceOnly}}
 }
 {{/operations}}

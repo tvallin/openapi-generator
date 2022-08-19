@@ -38,6 +38,33 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
+    public void doGenerateFullProject() {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("fullProject", true);
+        final CodegenConfigurator configurator = new CodegenConfigurator()
+                .setGeneratorName("java-helidon-server")
+                .setLibrary("se")
+                .setAdditionalProperties(additionalProperties)
+                .setInputSpec("src/test/resources/3_0/helidon/petstore-for-testing.yaml")
+                .setOutputDir(outputPath);
+        generator.opts(configurator.toClientOptInput()).generate();
+
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
+                      .fileContains(
+                              "public class PetService implements Service",
+                              "response.status(HTTP_CODE_NOT_IMPLEMENTED).send();"
+                      );
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/Main.java"))
+                      .fileContains(
+                              "import org.openapitools.server.api.PetService;",
+                              ".register(\"/\", new PetService(config))"
+                      );
+        TestUtils.assertFileNotContains(
+                Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"),
+                "    abstract Void handleError(ServerRequest request, ServerResponse response, Throwable throwable);");
+    }
+
+    @Test
     public void doGenerateInterfaceOnly() {
         Map<String, Object> additionalProperties = new HashMap<>();
         additionalProperties.put("interfaceOnly", true);

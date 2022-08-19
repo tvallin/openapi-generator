@@ -46,12 +46,14 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
     private final Logger LOGGER = LoggerFactory.getLogger(JavaHelidonServerCodegen.class);
 
     public static final String INTERFACE_ONLY = "interfaceOnly";
+    public static final String FULL_PROJECT = "fullProject";
 
     protected boolean useBeanValidation = true;
     protected String implFolder = "src/main/java";
     protected String serializationLibrary = null;
 
     private boolean interfaceOnly = false;
+    private boolean fullProject = false;
 
     public JavaHelidonServerCodegen() {
         super();
@@ -78,6 +80,8 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(CliOption.newBoolean(PERFORM_BEANVALIDATION, "Perform BeanValidation"));
         cliOptions.add(CliOption.newBoolean(INTERFACE_ONLY,
                 "Whether to generate only API interface stubs without the server files.", interfaceOnly));
+        cliOptions.add(CliOption.newBoolean(FULL_PROJECT,
+                "Whether to generate full project with registered services and configured routing.", fullProject));
 
         // clear model and api doc template as this codegen
         // does not support auto-generated markdown doc at the moment
@@ -140,9 +144,16 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         if (additionalProperties.containsKey(INTERFACE_ONLY) && isLibrary(HELIDON_SE)) {
             interfaceOnly = Boolean.parseBoolean(additionalProperties.get(INTERFACE_ONLY).toString());
         }
-
         if (!interfaceOnly) {
             additionalProperties.remove(INTERFACE_ONLY);
+        }
+
+        //TODO remove isLibrary(HELIDON_SE) after fullProject will be implemented in Helidon MP
+        if (additionalProperties.containsKey(FULL_PROJECT) && isLibrary(HELIDON_SE)) {
+            fullProject = Boolean.parseBoolean(additionalProperties.get(FULL_PROJECT).toString());
+        }
+        if (!fullProject) {
+            additionalProperties.remove(FULL_PROJECT);
         }
 
         if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE_PROPERTY)) {

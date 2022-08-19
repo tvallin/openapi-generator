@@ -1,4 +1,6 @@
 package {{invokerPackage}};
+{{#fullProject}}{{#apiInfo}}{{#apis}}{{#operations}}
+import {{package}}.{{classname}};{{/operations}}{{/apis}}{{/apiInfo}}{{/fullProject}}
 
 import io.helidon.common.LogConfig;
 import io.helidon.common.reactive.Single;
@@ -92,7 +94,8 @@ public final class Main {
         return Routing.builder()
                       .register(OpenAPISupport.create(config.get(OpenAPISupport.Builder.CONFIG_KEY)))
                       .register(health)                   // Health at "/health"
-                      .register(metrics)                  // Metrics at "/metrics"
+                      .register(metrics)                  // Metrics at "/metrics"{{#fullProject}}{{#apiInfo}}{{#apis}}{{#operations}}
+                      .register("/", new {{classname}}(config)){{/operations}}{{/apis}}{{/apiInfo}}{{/fullProject}}
                       .build();
     }
 }
