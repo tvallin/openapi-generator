@@ -106,4 +106,20 @@ public class JavaHelidonMpServerCodegenTest {
                 .assertMethod("updateUser", "String", "User");
     }
 
+    @Test
+    public void doGenerateInterfaceOnly() {
+        generate(createConfigurator().addAdditionalProperty("interfaceOnly", "true"));
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
+                .fileContains("public interface PetService")
+                .assertMethod("addPet", "Pet")
+                .doesNotHaveImplementation();
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreService.java"))
+                .fileContains("public interface StoreService")
+                .assertMethod("placeOrder", "Order")
+                .doesNotHaveImplementation()
+                .hasReturnType("Order");
+    }
+
 }

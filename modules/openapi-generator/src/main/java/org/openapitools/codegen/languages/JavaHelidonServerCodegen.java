@@ -140,8 +140,7 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         importMapping.put("Jsonb", "javax.json.bind.Jsonb");
         importMapping.put("JsonbBuilder", "javax.json.bind.JsonbBuilder");
 
-        //TODO remove isLibrary(HELIDON_SE) after interfaceOnly will be implemented in Helidon MP
-        if (additionalProperties.containsKey(INTERFACE_ONLY) && isLibrary(HELIDON_SE)) {
+        if (additionalProperties.containsKey(INTERFACE_ONLY)) {
             interfaceOnly = Boolean.parseBoolean(additionalProperties.get(INTERFACE_ONLY).toString());
         }
         if (!interfaceOnly) {
