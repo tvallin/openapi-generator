@@ -49,7 +49,6 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |modelPackage|package for generated models| |org.openapitools.client.model|
 |openApiNullable|Enable OpenAPI Jackson Nullable library| |true|
 |prependFormOrBodyParameters|Add form or body parameters to the beginning of the parameter list.| |false|
-|rootJavaEEPackage|root package name for Java EE|**javax** or **jakarta**|javax|
 |serializableModel|boolean - toggle &quot;implements Serializable&quot; for generated models| |false|
 |serializationLibrary|Serialization library, defaults to Jackson|<dl><dt>**jsonb**</dt><dd>Use JSON-B as serialization library</dd><dt>**jackson**</dt><dd>Use Jackson as serialization library</dd></dl>|null|
 |snapshotVersion|Uses a SNAPSHOT version.|<dl><dt>**true**</dt><dd>Use a SnapShot Version</dd><dt>**false**</dt><dd>Use a Release Version</dd></dl>|null|
@@ -73,6 +72,7 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |x-field-extra-annotation|List of custom annotations to be added to property|FIELD|null
 |x-webclient-blocking|Specifies if method for specific operation should be blocking or non-blocking(ex: return `Mono<T>/Flux<T>` or `return T/List<T>/Set<T>` & execute `.block()` inside generated method)|OPERATION|false
 
+
 ## IMPORT MAPPING
 
 | Type/Alias | Imports |
@@ -95,6 +95,7 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |URI|java.net.URI|
 |UUID|java.util.UUID|
 
+
 ## INSTANTIATION TYPES
 
 | Type/Alias | Instantiated By |
@@ -102,6 +103,7 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 |array|ArrayList|
 |map|HashMap|
 |set|LinkedHashSet|
+
 
 ## LANGUAGE PRIMITIVES
 
@@ -193,6 +195,9 @@ These options may be applied as additional-properties (cli) or configOptions (pl
 <li>volatile</li>
 <li>while</li>
 </ul>
+
+## FEATURE SET
+
 
 ### Client Modification Feature
 | Name | Supported | Defined By |

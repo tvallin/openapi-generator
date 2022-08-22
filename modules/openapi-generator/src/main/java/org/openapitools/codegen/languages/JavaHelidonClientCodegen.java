@@ -23,6 +23,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Schema;
@@ -46,6 +48,16 @@ import org.openapitools.codegen.model.OperationsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_EMAIL;
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_NAME;
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_ORGANIZATION;
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_ORGANIZATION_URL;
+import static org.openapitools.codegen.CodegenConstants.PARENT_ARTIFACT_ID;
+import static org.openapitools.codegen.CodegenConstants.PARENT_GROUP_ID;
+import static org.openapitools.codegen.CodegenConstants.PARENT_VERSION;
+import static org.openapitools.codegen.CodegenConstants.SCM_CONNECTION;
+import static org.openapitools.codegen.CodegenConstants.SCM_DEVELOPER_CONNECTION;
+import static org.openapitools.codegen.CodegenConstants.SCM_URL;
 import static org.openapitools.codegen.CodegenConstants.SERIALIZATION_LIBRARY;
 
 public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
@@ -116,6 +128,19 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         serializationLibrary.setEnum(serializationOptions);
         cliOptions.add(serializationLibrary);
         setSerializationLibrary(SERIALIZATION_LIBRARY_JACKSON);     // default
+
+        // Remove currently unsupported options from base classes
+        removeCliOptions(SCM_CONNECTION,
+                SCM_DEVELOPER_CONNECTION,
+                SCM_URL,
+                DEVELOPER_NAME,
+                DEVELOPER_ORGANIZATION,
+                DEVELOPER_ORGANIZATION_URL,
+                DEVELOPER_EMAIL,
+                PARENT_ARTIFACT_ID,
+                PARENT_VERSION,
+                PARENT_GROUP_ID,
+                DISABLE_HTML_ESCAPING);
 
         // Ensure the OAS 3.x discriminator mappings include any descendent schemas that allOf
         // inherit from self, any oneOf schemas, any anyOf schemas, any x-discriminator-values,
@@ -405,5 +430,12 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         List<VendorExtension> extensions = super.getSupportedVendorExtensions();
         extensions.add(VendorExtension.X_WEBCLIENT_BLOCKING);
         return extensions;
+    }
+    private void removeCliOptions(String... opt) {
+        List<String> opts = Arrays.asList(opt);
+        Set<CliOption> forRemoval = cliOptions.stream()
+                .filter(cliOption -> opts.contains(cliOption.getOpt()))
+                .collect(Collectors.toSet());
+        forRemoval.forEach(cliOptions::remove);
     }
 }
