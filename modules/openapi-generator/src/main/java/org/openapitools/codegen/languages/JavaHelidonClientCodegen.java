@@ -19,6 +19,8 @@
 package org.openapitools.codegen.languages;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -165,27 +167,30 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             setConfigKey(additionalProperties.get(CONFIG_KEY).toString());
         }
 
-        String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
-        authFolder = (sourceFolder + '/' + invokerPackage + ".auth").replace(".", "/");
+        String invokerPath = invokerPackage.replace('.', File.separatorChar);
+        Path invokerFolder = Paths.get(sourceFolder, invokerPath);
+        authFolder = invokerFolder.resolve("auth").toString();
 
         if (isLibrary(HELIDON_MP)) {
-            String apiExceptionFolder = (sourceFolder + File.separator
-                    + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
+            String apiExceptionFolder = Paths.get(sourceFolder,
+                    apiPackage().replace('.', File.separatorChar)).toString();
+
             supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
             supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
             supportingFiles.add(new SupportingFile("api_exception.mustache", apiExceptionFolder, "ApiException.java"));
             supportingFiles.add(new SupportingFile("api_exception_mapper.mustache", apiExceptionFolder, "ApiExceptionMapper.java"));
 
             if (additionalProperties.containsKey("jsr310")) {
-                supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache", invokerFolder, "JavaTimeFormatter.java"));
+                supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache",
+                        invokerFolder.toString(), "JavaTimeFormatter.java"));
             }
         } else if (isLibrary(HELIDON_SE)) {
             // TODO check for SE-specifics and supporting files used for both MP and SE
             supportingFiles.clear();
             supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
             supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
-            supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder, "ApiClient.java"));
-            supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder, "Pair.java"));
+            supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder.toString(), "ApiClient.java"));
+            supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder.toString(), "Pair.java"));
         }
         else {
             LOGGER.error("Unknown library option (-l/--library): {}", getLibrary());
@@ -199,7 +204,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             case SERIALIZATION_LIBRARY_JACKSON:
                 additionalProperties.put(SERIALIZATION_LIBRARY_JACKSON, "true");
                 additionalProperties.remove(SERIALIZATION_LIBRARY_JSONB);
-                supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder, "RFC3339DateFormat.java"));
+                supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder.toString(), "RFC3339DateFormat.java"));
                 break;
             case SERIALIZATION_LIBRARY_JSONB:
                 openApiNullable = false;        // for Jackson only
