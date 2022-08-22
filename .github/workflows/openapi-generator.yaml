@@ -81,8 +81,8 @@ jobs:
           name: surefire-test-results
           path: '**/surefire-reports/TEST-*.xml'
 
-  helidon-test:
-    name: Helidon Functional tests
+  functional-test:
+    name: Functional tests
     runs-on: ubuntu-latest
     needs:
       - build
@@ -108,7 +108,7 @@ jobs:
             ${{ runner.os }}-build-${{ env.cache-name }}-
             ${{ runner.os }}-build-
       - name: Run unit tests
-        run: cd modules/openapi-generator && mvn --no-snapshot-updates --batch-mode -Dtest="org/openapitools/codegen/java/helidon/functional/*Test" test -Dorg.slf4j.simpleLogger.defaultLogLevel=error
+        run: cd modules/openapi-generator && mvn --no-snapshot-updates --batch-mode -Dtest="**/functional/*Test" test -Dorg.slf4j.simpleLogger.defaultLogLevel=error
       - name: Publish unit test reports
         if: ${{ always() }}
         uses: actions/upload-artifact@v3

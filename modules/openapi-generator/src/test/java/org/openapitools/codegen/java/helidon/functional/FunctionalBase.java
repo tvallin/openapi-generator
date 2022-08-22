@@ -57,6 +57,7 @@ abstract class FunctionalBase {
     private static final boolean IS_WINDOWS_OS;
 
     protected static final String INTERFACE_ONLY = "InterfaceOnly";
+    protected static final String FULL_PROJECT = "fullProject";
 
     private String library;
     private String generatorName;

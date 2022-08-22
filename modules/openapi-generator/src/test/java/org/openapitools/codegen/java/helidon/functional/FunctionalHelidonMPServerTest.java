@@ -38,22 +38,24 @@ public class FunctionalHelidonMPServerTest extends FunctionalBase {
     @Test
     void buildProjectDefaultOptions() {
         generate();
-        ProcessReader reader = runMavenProcessAndWait("package");
-        Path executableJar = outputPath.resolve("target/openapi-java-server.jar");
-
-        assertThat(reader.readOutputConsole(), containsString("BUILD SUCCESS"));
-        assertThat(Files.exists(executableJar), is(true));
+        buildAndVerify("target/openapi-java-server.jar");
     }
 
     @Test
     void buildProjectInterfaceOnly() {
-        generate(createConfigurator().addAdditionalProperty(FunctionalBase.INTERFACE_ONLY, "true"));
-        ProcessReader reader = runMavenProcessAndWait("package");
-        String output = reader.readOutputConsole();
+        generate(createConfigurator().addAdditionalProperty(INTERFACE_ONLY, "true"));
+        buildAndVerify("target/openapi-java-server.jar");
+    }
 
-        assertThat(output, containsString("BUILD SUCCESS"));
-        assertThat(output, containsString("Errors: 0"));
-        assertThat(output, containsString("Failures: 0"));
-        assertThat(output, containsString("Skipped: 0"));
+    @Test
+    void buildProjectAbstractClasses() {
+        generate(createConfigurator().addAdditionalProperty(FULL_PROJECT, "false"));
+        buildAndVerify("target/openapi-java-server.jar");
+    }
+
+    @Test
+    void buildFullProject() {
+        generate(createConfigurator().addAdditionalProperty(FULL_PROJECT, "true"));
+        buildAndVerify("target/openapi-java-server.jar");
     }
 }

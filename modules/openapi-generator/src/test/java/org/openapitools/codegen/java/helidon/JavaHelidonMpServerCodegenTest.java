@@ -44,6 +44,36 @@ public class JavaHelidonMpServerCodegenTest {
     }
 
     @Test
+    public void testAbstractClass() {
+        generate(createConfigurator().addAdditionalProperty("fullProject", "false"));
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
+                .fileContains("public abstract class PetService")
+                .assertMethod("addPet", "Pet")
+                .doesNotHaveImplementation();
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreService.java"))
+                .fileContains("public abstract class StoreService")
+                .assertMethod("placeOrder", "Order")
+                .doesNotHaveImplementation()
+                .hasReturnType("Order");
+    }
+
+    @Test
+    public void testFullProject() {
+        generate(createConfigurator().addAdditionalProperty("fullProject", "true"));
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
+                .fileContains("public class PetService")
+                .assertMethod("addPet", "Pet");
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreService.java"))
+                .fileContains("public class StoreService")
+                .assertMethod("placeOrder", "Order")
+                .hasReturnType("Response");
+    }
+
+    @Test
     public void validatePetApi() {
         generate();
 

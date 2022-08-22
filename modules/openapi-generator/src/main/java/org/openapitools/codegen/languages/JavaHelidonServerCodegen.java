@@ -147,8 +147,7 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
             additionalProperties.remove(INTERFACE_ONLY);
         }
 
-        //TODO remove isLibrary(HELIDON_SE) after fullProject will be implemented in Helidon MP
-        if (additionalProperties.containsKey(FULL_PROJECT) && isLibrary(HELIDON_SE)) {
+        if (additionalProperties.containsKey(FULL_PROJECT)) {
             fullProject = Boolean.parseBoolean(additionalProperties.get(FULL_PROJECT).toString());
         }
         if (!fullProject) {
