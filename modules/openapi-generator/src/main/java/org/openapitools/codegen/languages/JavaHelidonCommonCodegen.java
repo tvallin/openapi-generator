@@ -27,6 +27,17 @@ import org.openapitools.codegen.CodegenConstants;
 import org.openapitools.codegen.languages.features.BeanValidationFeatures;
 import org.openapitools.codegen.languages.features.PerformBeanValidationFeatures;
 
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_EMAIL;
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_NAME;
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_ORGANIZATION;
+import static org.openapitools.codegen.CodegenConstants.DEVELOPER_ORGANIZATION_URL;
+import static org.openapitools.codegen.CodegenConstants.PARENT_ARTIFACT_ID;
+import static org.openapitools.codegen.CodegenConstants.PARENT_GROUP_ID;
+import static org.openapitools.codegen.CodegenConstants.PARENT_VERSION;
+import static org.openapitools.codegen.CodegenConstants.SCM_CONNECTION;
+import static org.openapitools.codegen.CodegenConstants.SCM_DEVELOPER_CONNECTION;
+import static org.openapitools.codegen.CodegenConstants.SCM_URL;
+
 public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
         implements BeanValidationFeatures, PerformBeanValidationFeatures {
 
@@ -88,6 +99,24 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
         }
 
         additionalProperties.put(HELIDON_VERSION, helidonVersion);
+    }
+
+    /**
+     * Remove set of options not currently used by any Helidon generator. Should be
+     * called during construction but only on leaf classes.
+     */
+    protected void removeUnusedOptions() {
+        removeCliOptions(SCM_CONNECTION,
+                SCM_DEVELOPER_CONNECTION,
+                SCM_URL,
+                DEVELOPER_NAME,
+                DEVELOPER_ORGANIZATION,
+                DEVELOPER_ORGANIZATION_URL,
+                DEVELOPER_EMAIL,
+                PARENT_ARTIFACT_ID,
+                PARENT_VERSION,
+                PARENT_GROUP_ID,
+                DISABLE_HTML_ESCAPING);
     }
 
     private void setHelidonVersion(String version) {

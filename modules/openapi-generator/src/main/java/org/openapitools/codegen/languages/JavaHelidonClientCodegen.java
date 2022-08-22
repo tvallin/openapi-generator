@@ -46,16 +46,6 @@ import org.openapitools.codegen.model.OperationsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static org.openapitools.codegen.CodegenConstants.DEVELOPER_EMAIL;
-import static org.openapitools.codegen.CodegenConstants.DEVELOPER_NAME;
-import static org.openapitools.codegen.CodegenConstants.DEVELOPER_ORGANIZATION;
-import static org.openapitools.codegen.CodegenConstants.DEVELOPER_ORGANIZATION_URL;
-import static org.openapitools.codegen.CodegenConstants.PARENT_ARTIFACT_ID;
-import static org.openapitools.codegen.CodegenConstants.PARENT_GROUP_ID;
-import static org.openapitools.codegen.CodegenConstants.PARENT_VERSION;
-import static org.openapitools.codegen.CodegenConstants.SCM_CONNECTION;
-import static org.openapitools.codegen.CodegenConstants.SCM_DEVELOPER_CONNECTION;
-import static org.openapitools.codegen.CodegenConstants.SCM_URL;
 import static org.openapitools.codegen.CodegenConstants.SERIALIZATION_LIBRARY;
 
 public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
@@ -127,18 +117,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(serializationLibrary);
         setSerializationLibrary(SERIALIZATION_LIBRARY_JACKSON);     // default
 
-        // Remove currently unsupported options from base classes
-        removeCliOptions(SCM_CONNECTION,
-                SCM_DEVELOPER_CONNECTION,
-                SCM_URL,
-                DEVELOPER_NAME,
-                DEVELOPER_ORGANIZATION,
-                DEVELOPER_ORGANIZATION_URL,
-                DEVELOPER_EMAIL,
-                PARENT_ARTIFACT_ID,
-                PARENT_VERSION,
-                PARENT_GROUP_ID,
-                DISABLE_HTML_ESCAPING);
+        removeUnusedOptions();
 
         // Ensure the OAS 3.x discriminator mappings include any descendent schemas that allOf
         // inherit from self, any oneOf schemas, any anyOf schemas, any x-discriminator-values,

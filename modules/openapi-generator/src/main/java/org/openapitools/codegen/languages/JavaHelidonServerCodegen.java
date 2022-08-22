@@ -112,6 +112,8 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(serializationLibrary);
         setSerializationLibrary(SERIALIZATION_LIBRARY_JACKSON);
 
+        removeUnusedOptions();
+
         this.setLegacyDiscriminatorBehavior(false);
     }
 
