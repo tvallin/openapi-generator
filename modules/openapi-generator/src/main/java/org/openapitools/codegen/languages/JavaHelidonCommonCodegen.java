@@ -16,7 +16,11 @@
 
 package org.openapitools.codegen.languages;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
@@ -29,11 +33,12 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     static final String HELIDON_MP = "mp";
     static final String HELIDON_SE = "se";
 
-    static final String MICROPROFILE_REST_CLIENT_DEFAULT_ROOT_PACKAGE = "javax";
     static final String HELIDON_NIMA = "nima";
     static final String HELIDON_NIMA_ANNOTATIONS = "nima-annotations";
 
-    static final String MICROPROFILE_ROOT_PACKAGE_PROPERTY = "rootJavaEEPackage";
+    static final String MICROPROFILE_ROOT_PACKAGE = "rootJavaEEPackage";
+    static final String MICROPROFILE_ROOT_PACKAGE_DESC = "Root package name for Java EE";
+    static final String MICROPROFILE_ROOT_PACKAGE_DEFAULT = "javax";
 
     static final String SERIALIZATION_LIBRARY_JACKSON = "jackson";
     static final String SERIALIZATION_LIBRARY_JSONB = "jsonb";
@@ -46,7 +51,10 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
 
     public JavaHelidonCommonCodegen() {
         super();
-        cliOptions.add(new CliOption(HELIDON_VERSION, HELIDON_VERSION_DESC).defaultValue(DEFAULT_HELIDON_VERSION));
+        cliOptions.add(new CliOption(HELIDON_VERSION, HELIDON_VERSION_DESC)
+                .defaultValue(DEFAULT_HELIDON_VERSION));
+        cliOptions.add(new CliOption(MICROPROFILE_ROOT_PACKAGE, MICROPROFILE_ROOT_PACKAGE_DESC)
+                .defaultValue(MICROPROFILE_ROOT_PACKAGE_DEFAULT));
     }
 
     @Override
@@ -85,5 +93,13 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     private void setHelidonVersion(String version) {
         helidonVersion = version;
         setParentVersion(version);
+    }
+
+    protected void removeCliOptions(String... opt) {
+        List<String> opts = Arrays.asList(opt);
+        Set<CliOption> forRemoval = cliOptions.stream()
+                .filter(cliOption -> opts.contains(cliOption.getOpt()))
+                .collect(Collectors.toSet());
+        forRemoval.forEach(cliOptions::remove);
     }
 }

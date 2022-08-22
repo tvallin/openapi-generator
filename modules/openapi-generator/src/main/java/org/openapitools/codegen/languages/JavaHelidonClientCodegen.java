@@ -23,8 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Schema;
@@ -99,7 +97,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         artifactId = "openapi-java-client";
         apiPackage = invokerPackage + ".api";
         modelPackage = invokerPackage + ".model";
-        rootJavaEEPackage = MICROPROFILE_REST_CLIENT_DEFAULT_ROOT_PACKAGE;
+        rootJavaEEPackage = MICROPROFILE_ROOT_PACKAGE_DEFAULT;
 
         updateOption(CodegenConstants.INVOKER_PACKAGE, getInvokerPackage());
         updateOption(CodegenConstants.ARTIFACT_ID, getArtifactId());
@@ -176,8 +174,8 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     public void processOpts() {
         super.processOpts();
 
-        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE_PROPERTY)) {
-            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE_PROPERTY, rootJavaEEPackage);
+        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
+            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, rootJavaEEPackage);
         }
 
         if (additionalProperties.containsKey(SERIALIZATION_LIBRARY)) {
@@ -430,12 +428,5 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         List<VendorExtension> extensions = super.getSupportedVendorExtensions();
         extensions.add(VendorExtension.X_WEBCLIENT_BLOCKING);
         return extensions;
-    }
-    private void removeCliOptions(String... opt) {
-        List<String> opts = Arrays.asList(opt);
-        Set<CliOption> forRemoval = cliOptions.stream()
-                .filter(cliOption -> opts.contains(cliOption.getOpt()))
-                .collect(Collectors.toSet());
-        forRemoval.forEach(cliOptions::remove);
     }
 }
