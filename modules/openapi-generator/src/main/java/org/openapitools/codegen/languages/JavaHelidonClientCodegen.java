@@ -19,6 +19,8 @@
 package org.openapitools.codegen.languages;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -45,6 +47,8 @@ import org.openapitools.codegen.model.ModelsMap;
 import org.openapitools.codegen.model.OperationsMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static org.openapitools.codegen.CodegenConstants.SERIALIZATION_LIBRARY;
 
 public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
@@ -85,7 +89,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         artifactId = "openapi-java-client";
         apiPackage = invokerPackage + ".api";
         modelPackage = invokerPackage + ".model";
-        rootJavaEEPackage = MICROPROFILE_REST_CLIENT_DEFAULT_ROOT_PACKAGE;
+        rootJavaEEPackage = MICROPROFILE_ROOT_PACKAGE_DEFAULT;
 
         updateOption(CodegenConstants.INVOKER_PACKAGE, getInvokerPackage());
         updateOption(CodegenConstants.ARTIFACT_ID, getArtifactId());
@@ -106,7 +110,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(libraryOption);
         setLibrary(HELIDON_MP);     // default
 
-        CliOption serializationLibrary = new CliOption(CodegenConstants.SERIALIZATION_LIBRARY,
+        CliOption serializationLibrary = new CliOption(SERIALIZATION_LIBRARY,
                 "Serialization library, defaults to Jackson");
         Map<String, String> serializationOptions = new HashMap<>();
         serializationOptions.put(SERIALIZATION_LIBRARY_JACKSON, "Use Jackson as serialization library");
@@ -114,6 +118,8 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         serializationLibrary.setEnum(serializationOptions);
         cliOptions.add(serializationLibrary);
         setSerializationLibrary(SERIALIZATION_LIBRARY_JACKSON);     // default
+
+        removeUnusedOptions();
 
         // Ensure the OAS 3.x discriminator mappings include any descendent schemas that allOf
         // inherit from self, any oneOf schemas, any anyOf schemas, any x-discriminator-values,
@@ -149,40 +155,42 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     public void processOpts() {
         super.processOpts();
 
-        if (!additionalProperties.containsKey("rootJavaEEPackage")) {
-            additionalProperties.put("rootJavaEEPackage", rootJavaEEPackage);
+        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
+            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, rootJavaEEPackage);
         }
 
-        if (additionalProperties.containsKey(CodegenConstants.SERIALIZATION_LIBRARY)) {
-            setSerializationLibrary(additionalProperties.get(CodegenConstants.SERIALIZATION_LIBRARY).toString());
+        if (additionalProperties.containsKey(SERIALIZATION_LIBRARY)) {
+            setSerializationLibrary(additionalProperties.get(SERIALIZATION_LIBRARY).toString());
         }
 
         if (additionalProperties.containsKey(CONFIG_KEY)) {
             setConfigKey(additionalProperties.get(CONFIG_KEY).toString());
         }
 
-        String invokerFolder = (sourceFolder + '/' + invokerPackage).replace(".", "/");
-        authFolder = (sourceFolder + '/' + invokerPackage + ".auth").replace(".", "/");
-
-        if (additionalProperties.containsKey("jsr310") && isLibrary(HELIDON_MP)) {
-            supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache", invokerFolder, "JavaTimeFormatter.java"));
-        }
+        String invokerPath = invokerPackage.replace('.', File.separatorChar);
+        Path invokerFolder = Paths.get(sourceFolder, invokerPath);
+        authFolder = invokerFolder.resolve("auth").toString();
 
         if (isLibrary(HELIDON_MP)) {
-            supportingFiles.clear();
-            String apiExceptionFolder = (sourceFolder + File.separator
-                    + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
+            String apiExceptionFolder = Paths.get(sourceFolder,
+                    apiPackage().replace('.', File.separatorChar)).toString();
+
             supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
             supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
             supportingFiles.add(new SupportingFile("api_exception.mustache", apiExceptionFolder, "ApiException.java"));
             supportingFiles.add(new SupportingFile("api_exception_mapper.mustache", apiExceptionFolder, "ApiExceptionMapper.java"));
+
+            if (additionalProperties.containsKey("jsr310")) {
+                supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache",
+                        invokerFolder.toString(), "JavaTimeFormatter.java"));
+            }
         } else if (isLibrary(HELIDON_SE)) {
             // TODO check for SE-specifics and supporting files used for both MP and SE
             supportingFiles.clear();
             supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
             supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
-            supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder, "ApiClient.java"));
-            supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder, "Pair.java"));
+            supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder.toString(), "ApiClient.java"));
+            supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder.toString(), "Pair.java"));
         }
         else {
             LOGGER.error("Unknown library option (-l/--library): {}", getLibrary());
@@ -196,7 +204,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             case SERIALIZATION_LIBRARY_JACKSON:
                 additionalProperties.put(SERIALIZATION_LIBRARY_JACKSON, "true");
                 additionalProperties.remove(SERIALIZATION_LIBRARY_JSONB);
-                supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder, "RFC3339DateFormat.java"));
+                supportingFiles.add(new SupportingFile("RFC3339DateFormat.mustache", invokerFolder.toString(), "RFC3339DateFormat.java"));
                 break;
             case SERIALIZATION_LIBRARY_JSONB:
                 openApiNullable = false;        // for Jackson only
@@ -214,18 +222,13 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     @Override
     public OperationsMap postProcessOperationsWithModels(OperationsMap objs, List<ModelMap> allModels) {
         super.postProcessOperationsWithModels(objs, allModels);
-        if (HELIDON_MP.equals(getLibrary())) {
+        if (isLibrary(HELIDON_MP)) {
             return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         } else {
             // TODO What do we do for SE clients?
             LOGGER.warn("Might need SE-specific code here");
             return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         }
-    }
-
-    @Override
-    public String apiFilename(String templateName, String tag) {
-        return super.apiFilename(templateName, tag);
     }
 
     @Override
@@ -266,12 +269,12 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     @Override
     public CodegenModel fromModel(String name, Schema model) {
         CodegenModel codegenModel = super.fromModel(name, model);
-        if (HELIDON_MP.equals(getLibrary())) {
+        if (isLibrary(HELIDON_MP)) {
             if (codegenModel.imports.contains("ApiModel")) {
                 // Remove io.swagger.annotations.ApiModel import
                 codegenModel.imports.remove("ApiModel");
             }
-        } else if (HELIDON_SE.equals(getLibrary())) {
+        } else if (isLibrary(HELIDON_SE)) {
             if (codegenModel.imports.contains("ApiModel")) {
                 // Remove io.swagger.annotations.ApiModel import
                 codegenModel.imports.remove("ApiModel");

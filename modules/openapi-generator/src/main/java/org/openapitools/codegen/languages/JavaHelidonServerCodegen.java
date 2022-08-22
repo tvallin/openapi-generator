@@ -112,6 +112,8 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(serializationLibrary);
         setSerializationLibrary(SERIALIZATION_LIBRARY_JACKSON);
 
+        removeUnusedOptions();
+
         this.setLegacyDiscriminatorBehavior(false);
     }
 
@@ -154,8 +156,8 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
             additionalProperties.remove(FULL_PROJECT);
         }
 
-        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE_PROPERTY)) {
-            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE_PROPERTY, MICROPROFILE_REST_CLIENT_DEFAULT_ROOT_PACKAGE);
+        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
+            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, MICROPROFILE_ROOT_PACKAGE_DEFAULT);
         }
 
         if (additionalProperties.containsKey(CodegenConstants.SERIALIZATION_LIBRARY)) {
