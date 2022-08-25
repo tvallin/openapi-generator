@@ -30,6 +30,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
@@ -75,18 +76,24 @@ abstract class FunctionalBase {
 
     protected CodegenConfigurator createConfigurator() {
         try {
-            outputPath = Files.createTempDirectory("test");
-            String sanitizedPath = outputPath.toFile()
-                    .getAbsolutePath()
-                    .replace('\\', '/');
-            return new CodegenConfigurator()
-                    .setGeneratorName(generatorName)
-                    .setLibrary(library)
-                    .setInputSpec(inputSpec)
-                    .setOutputDir(sanitizedPath);
+           return createConfigurator(Files.createTempDirectory("test"));
         } catch (IOException e) {
             throw new UncheckedIOException("Can not create temp directory", e);
         }
+    }
+
+    protected CodegenConfigurator createConfigurator(Path outputPath) {
+        Objects.requireNonNull(inputSpec);
+        this.outputPath = outputPath;
+        String sanitizedPath = outputPath.toFile()
+                .getAbsolutePath()
+                .replace('\\', '/');
+        return new CodegenConfigurator()
+                .setGeneratorName(generatorName)
+                .setLibrary(library)
+                .setInputSpec(inputSpec)
+                .setOutputDir(sanitizedPath);
+
     }
 
     protected void generate(CodegenConfigurator config) {
@@ -103,7 +110,6 @@ abstract class FunctionalBase {
         inputSpec(inputSpec);
         generate(createConfigurator());
     }
-
 
     protected void generatorName(String generatorName) {
         this.generatorName = generatorName;

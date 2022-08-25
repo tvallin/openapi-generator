@@ -46,7 +46,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
     private final Logger LOGGER = LoggerFactory.getLogger(JavaHelidonServerCodegen.class);
 
     public static final String INTERFACE_ONLY = "interfaceOnly";
-    public static final String FULL_PROJECT = "fullProject";
 
     protected boolean useBeanValidation = true;
     protected String implFolder = "src/main/java";
@@ -80,8 +79,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         cliOptions.add(CliOption.newBoolean(PERFORM_BEANVALIDATION, "Perform BeanValidation"));
         cliOptions.add(CliOption.newBoolean(INTERFACE_ONLY,
                 "Whether to generate only API interface stubs without the server files.", interfaceOnly));
-        cliOptions.add(CliOption.newBoolean(FULL_PROJECT,
-                "Whether to generate full project with registered services and configured routing.", fullProject));
 
         // clear model and api doc template as this codegen
         // does not support auto-generated markdown doc at the moment
