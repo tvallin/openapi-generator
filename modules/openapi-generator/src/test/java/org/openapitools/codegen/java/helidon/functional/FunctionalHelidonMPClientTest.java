@@ -74,12 +74,12 @@ public class FunctionalHelidonMPClientTest extends FunctionalBase {
         generate(createConfigurator(outputPath).addAdditionalProperty(FULL_PROJECT, "false"));
         Path pom3 = outputPath.resolve("pom.xml");
         assertThat(Files.exists(pom3), is(true));
-        assertThat(pom3.toFile().lastModified(), is(lastModified));
+        assertThat(pom3.toFile().lastModified(), is(lastModified));         // not overwritten
 
         // Re-generate project over same directory with fullProject true
         generate(createConfigurator(outputPath).addAdditionalProperty(FULL_PROJECT, "true"));
         Path pom4 = outputPath.resolve("pom.xml");
         assertThat(Files.exists(pom4), is(true));
-        assertThat(pom4.toFile().lastModified(), is(not(lastModified)));
+        assertThat(pom4.toFile().lastModified(), is(not(lastModified)));    // overwritten
     }
 }
