@@ -74,7 +74,8 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
                 .defaultValue(DEFAULT_HELIDON_VERSION));
         cliOptions.add(new CliOption(MICROPROFILE_ROOT_PACKAGE, MICROPROFILE_ROOT_PACKAGE_DESC)
                 .defaultValue(MICROPROFILE_ROOT_PACKAGE_DEFAULT));
-        cliOptions.add(CliOption.newBoolean(FULL_PROJECT, FULL_PROJECT_DESC));
+        cliOptions.add(new CliOption(FULL_PROJECT, FULL_PROJECT_DESC)
+                .defaultValue(""));     // depends on project state
     }
 
     @Override
