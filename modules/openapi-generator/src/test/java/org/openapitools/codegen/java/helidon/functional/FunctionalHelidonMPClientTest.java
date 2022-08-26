@@ -16,8 +16,16 @@
 
 package org.openapitools.codegen.java.helidon.functional;
 
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class FunctionalHelidonMPClientTest extends FunctionalBase {
 
@@ -43,5 +51,35 @@ public class FunctionalHelidonMPClientTest extends FunctionalBase {
     void buildPetstoreNoMultipart() {
         generate("src/test/resources/3_0/helidon/petstore-no-multipart-for-testing.yaml");
         buildAndVerify("target/openapi-java-client.jar");
+    }
+
+    @Test
+    void verifyFullProjectSemantics() {
+        inputSpec("src/test/resources/3_0/petstore.yaml");
+
+        // Generate project for first time and record pom's timestamp
+        generate(createConfigurator());
+        buildAndVerify("target/openapi-java-client.jar");
+        Path pom1 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom1), is(true));
+        long lastModified = pom1.toFile().lastModified();
+
+        // Re-generate project over same directory with fullProject unspecified
+        generate(createConfigurator(outputPath));
+        Path pom2 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom2), is(true));
+        assertThat(pom2.toFile().lastModified(), is(lastModified));         // not overwritten
+
+        // Re-generate project over same directory with fullProject false
+        generate(createConfigurator(outputPath).addAdditionalProperty(FULL_PROJECT, "false"));
+        Path pom3 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom3), is(true));
+        assertThat(pom3.toFile().lastModified(), is(lastModified));         // not overwritten
+
+        // Re-generate project over same directory with fullProject true
+        generate(createConfigurator(outputPath).addAdditionalProperty(FULL_PROJECT, "true"));
+        Path pom4 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom4), is(true));
+        assertThat(pom4.toFile().lastModified(), is(not(lastModified)));    // overwritten
     }
 }

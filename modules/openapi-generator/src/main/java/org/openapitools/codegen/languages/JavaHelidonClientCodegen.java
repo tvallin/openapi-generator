@@ -21,6 +21,7 @@ package org.openapitools.codegen.languages;
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -61,7 +62,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     protected boolean performBeanValidation = false;
     protected boolean useGzipFeature = false;
     protected boolean caseInsensitiveResponseHeaders = false;
-    protected String authFolder;
+    protected Path invokerFolder;
     protected String serializationLibrary = null;
     protected String rootJavaEEPackage;
 
@@ -168,22 +169,23 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         }
 
         String invokerPath = invokerPackage.replace('.', File.separatorChar);
-        Path invokerFolder = Paths.get(sourceFolder, invokerPath);
-        authFolder = invokerFolder.resolve("auth").toString();
+        invokerFolder = Paths.get(sourceFolder, invokerPath);
 
         if (isLibrary(HELIDON_MP)) {
             String apiExceptionFolder = Paths.get(sourceFolder,
                     apiPackage().replace('.', File.separatorChar)).toString();
 
-            supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
-            supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
-            supportingFiles.add(new SupportingFile("api_exception.mustache", apiExceptionFolder, "ApiException.java"));
-            supportingFiles.add(new SupportingFile("api_exception_mapper.mustache", apiExceptionFolder, "ApiExceptionMapper.java"));
-
+            List<SupportingFile> modifiable = new ArrayList<>();
+            modifiable.add(new SupportingFile("pom.mustache", "", "pom.xml"));
+            modifiable.add(new SupportingFile("README.mustache", "", "README.md"));
+            List<SupportingFile> unmodifiable = new ArrayList<>();
+            unmodifiable.add(new SupportingFile("api_exception.mustache", apiExceptionFolder, "ApiException.java"));
+            unmodifiable.add(new SupportingFile("api_exception_mapper.mustache", apiExceptionFolder, "ApiExceptionMapper.java"));
             if (additionalProperties.containsKey("jsr310")) {
-                supportingFiles.add(new SupportingFile("JavaTimeFormatter.mustache",
+                unmodifiable.add(new SupportingFile("JavaTimeFormatter.mustache",
                         invokerFolder.toString(), "JavaTimeFormatter.java"));
             }
+            processSupportingFiles(modifiable, unmodifiable);
         } else if (isLibrary(HELIDON_SE)) {
             // TODO check for SE-specifics and supporting files used for both MP and SE
             supportingFiles.clear();
@@ -217,6 +219,19 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
                 LOGGER.error("Unknown serialization library option");
                 break;
         }
+    }
+
+    /**
+     * Check if pom file and src directory already exist.
+     *
+     * @return outcome of test
+     */
+    @Override
+    protected boolean projectFilesExist() {
+        Path projectFolder = Paths.get(getOutputTestFolder());
+        Path pom = projectFolder.resolve("pom.xml");
+        Path src = projectFolder.resolve(invokerFolder);
+        return pom.toFile().exists() && src.toFile().exists();
     }
 
     @Override
