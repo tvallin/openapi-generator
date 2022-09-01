@@ -24,11 +24,16 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Schema;
+import io.swagger.v3.oas.models.servers.Server;
 import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.openapitools.codegen.CliOption;
@@ -55,6 +60,8 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JavaHelidonClientCodegen.class);
 
+    private static final String X_HELIDON_REQUIRED_IMPL_IMPORTS = "x-helidon-requiredImplImports";
+    private static final String X_HELIDON_IMPL_IMPORTS = "x-helidon-implImports";
     public static final String CONFIG_KEY = "configKey";
 
     protected String configKey = null;
@@ -153,6 +160,15 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     }
 
     @Override
+    public String apiFilename(String templateName, String tag) {
+        if (templateName.contains("_impl")) {
+            String suffix = apiTemplateFiles().get(templateName);
+            return apiFileFolder() + File.separator + toApiFilename(tag) + "Impl" + suffix;
+        }
+        return super.apiFilename(templateName, tag);
+    }
+
+    @Override
     public void processOpts() {
         super.processOpts();
 
@@ -187,12 +203,24 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             }
             processSupportingFiles(modifiable, unmodifiable);
         } else if (isLibrary(HELIDON_SE)) {
-            // TODO check for SE-specifics and supporting files used for both MP and SE
-            supportingFiles.clear();
-            supportingFiles.add(new SupportingFile("pom.mustache", "", "pom.xml"));
-            supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
-            supportingFiles.add(new SupportingFile("ApiClient.mustache", invokerFolder.toString(), "ApiClient.java"));
-            supportingFiles.add(new SupportingFile("Pair.mustache", invokerFolder.toString(), "Pair.java"));
+            apiTemplateFiles.put("api_impl.mustache", ".java");
+            importMapping.put("StringJoiner", "java.util.StringJoiner");
+            importMapping.put("WebClientRequestHeaders", "io.helidon.webclient.WebClientRequestHeaders");
+            importMapping.put("Pair", invokerPackage + ".Pair");
+
+
+            List<SupportingFile> modifiable = new ArrayList<>();
+            modifiable.add(new SupportingFile("pom.mustache", "", "pom.xml"));
+            modifiable.add(new SupportingFile("README.mustache", "", "README.md"));
+
+            List<SupportingFile> unmodifiable = new ArrayList<>();
+            unmodifiable.add(new SupportingFile("ApiResponse.mustache", invokerFolder.toString(), "ApiResponse.java"));
+            unmodifiable.add(new SupportingFile("ApiResponseBase.mustache", invokerFolder.toString(), "ApiResponseBase.java"));
+            unmodifiable.add(new SupportingFile("ApiClient.mustache", invokerFolder.toString(), "ApiClient.java"));
+            unmodifiable.add(new SupportingFile("Pair.mustache", invokerFolder.toString(), "Pair.java"));
+            unmodifiable.add(new SupportingFile("ResponseType.mustache", apiFileFolder(), "ResponseType.java"));
+
+            processSupportingFiles(modifiable, unmodifiable);
         }
         else {
             LOGGER.error("Unknown library option (-l/--library): {}", getLibrary());
@@ -236,14 +264,65 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
     @Override
     public OperationsMap postProcessOperationsWithModels(OperationsMap objs, List<ModelMap> allModels) {
-        super.postProcessOperationsWithModels(objs, allModels);
         if (isLibrary(HELIDON_MP)) {
+            super.postProcessOperationsWithModels(objs, allModels);
             return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
         } else {
-            // TODO What do we do for SE clients?
-            LOGGER.warn("Might need SE-specific code here");
-            return AbstractJavaJAXRSServerCodegen.jaxrsPostProcessOperations(objs);
+            // Compute the imports to declare in the generated API impl class.
+            List<Map<String, String>> imports = objs.getImports();
+            List<Map<String, String>> implImports = new ArrayList<>(imports);
+
+            Set<String> requiredImplImportClassNames = new HashSet<>();
+            for (CodegenOperation op : objs.getOperations().getOperation()) {
+                requiredImplImportClassNames.addAll((Set) op.vendorExtensions.get(X_HELIDON_REQUIRED_IMPL_IMPORTS));
+            }
+
+            Set<String> missingImportClassNames = new TreeSet<>(requiredImplImportClassNames);
+            imports.stream()
+                .map(m -> m.get("classname"))
+                .forEach(missingImportClassNames::remove);
+
+            missingImportClassNames.forEach(c -> {
+                    Map<String, String> singleImportMap = new HashMap<>();
+                    singleImportMap.put("classname", c);
+                    singleImportMap.put("import", Objects.requireNonNull(importMapping.get(c), "no mapping for " + c));
+                    implImports.add(singleImportMap);
+                });
+
+            objs.put(X_HELIDON_IMPL_IMPORTS, implImports);
+            return objs;
         }
+    }
+
+    @Override
+    public CodegenOperation fromOperation(String path, String httpMethod, Operation operation, List<Server> servers) {
+        CodegenOperation op = super.fromOperation(path, httpMethod, operation, servers);
+        // We use two templates, one for the API interface and one for the impl class.
+        // Add to the normal imports for this operation only those imports used in both
+        // the API and the impl. Create a vendor extension on the operation to record the
+        // additional imports needed for the implementation class.
+        Set<String> requiredImplImports = new TreeSet<>();
+        if (op.isArray) {
+            op.imports.add("List");
+        }
+        if (op.isMap) {
+            op.imports.add("Map");
+        }
+        if (op.getHasQueryParams()) {
+            requiredImplImports.add("ArrayList");
+            requiredImplImports.add("Pair");
+        }
+        if (op.getHasHeaderParams()) {
+            requiredImplImports.add("WebClientRequestHeaders");
+        }
+        if (op.getHasFormParams()) {
+            requiredImplImports.add("StringJoiner");
+        }
+        if (op.getHasCookieParams()) {
+            requiredImplImports.add("StringJoiner");
+        }
+        op.vendorExtensions.put(X_HELIDON_REQUIRED_IMPL_IMPORTS, requiredImplImports);
+        return op;
     }
 
     @Override

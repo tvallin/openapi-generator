@@ -6,6 +6,7 @@ package {{package}};
 {{/imports}}
 
 import {{invokerPackage}}.ApiClient;
+import {{invokerPackage}}.ApiResponse;
 
 import org.junit.Test;
 import org.junit.BeforeClass;
@@ -39,7 +40,7 @@ public class {{classname}}Test {
     @BeforeClass
     public static void setup() {
         apiClient = ApiClient.builder().build();
-        api = new {{classname}}(apiClient);
+        api = {{classname}}Impl.create(apiClient);
     }
 
     {{#operations}}
@@ -56,8 +57,10 @@ public class {{classname}}Test {
         // TODO - assign values to the input arguments.
         {{{dataType}}} {{paramName}} = null;
         {{/allParams}}
-        Single<WebClientResponse> response = api.{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
-        response.await();
+
+        // TODO - uncomment the following two lines to invoke the service with valid parameters.
+        //ApiResponse<{{>operationResponseTypeDecl}}> response = api.{{operationId}}({{#allParams}}{{paramName}}{{^-last}}, {{/-last}}{{/allParams}});
+        //response.webClientResponse().await();
         // TODO - check for appropriate return status
         // assertThat("Return status", response.get().status().code(), is(expectedStatus));
 
