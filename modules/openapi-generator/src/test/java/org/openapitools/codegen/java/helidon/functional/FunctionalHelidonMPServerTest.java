@@ -17,6 +17,7 @@
 package org.openapitools.codegen.java.helidon.functional;
 
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.nio.file.Files;
@@ -47,6 +48,8 @@ public class FunctionalHelidonMPServerTest extends FunctionalBase {
         buildAndVerify("target/openapi-java-server.jar");
     }
 
+    //TODO remove it or change after MP implements new fullProject option
+    @Ignore
     @Test
     void buildProjectAbstractClasses() {
         generate(createConfigurator().addAdditionalProperty(FULL_PROJECT, "false"));

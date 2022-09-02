@@ -59,6 +59,7 @@ abstract class FunctionalBase {
 
     protected static final String INTERFACE_ONLY = "InterfaceOnly";
     protected static final String FULL_PROJECT = "fullProject";
+    protected static final String USE_ABSTRACT_CLASS = "useAbstractClass";
 
     private String library;
     private String generatorName;

@@ -4,6 +4,7 @@ import org.openapitools.codegen.DefaultGenerator;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.openapitools.codegen.java.assertions.JavaFileAssert;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.io.File;
@@ -43,6 +44,8 @@ public class JavaHelidonMpServerCodegenTest {
         generate(createConfigurator());
     }
 
+    //TODO remove it or change after MP implements new fullProject option
+    @Ignore
     @Test
     public void testAbstractClass() {
         generate(createConfigurator().addAdditionalProperty("fullProject", "false"));

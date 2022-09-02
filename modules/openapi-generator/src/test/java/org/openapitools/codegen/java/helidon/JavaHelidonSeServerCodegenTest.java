@@ -9,11 +9,14 @@ import java.util.Map;
 
 import org.openapitools.codegen.ClientOptInput;
 import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.Generator;
 import org.openapitools.codegen.TestUtils;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.openapitools.codegen.java.assertions.JavaFileAssert;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
+
+import static org.testng.Assert.assertTrue;
 
 public class JavaHelidonSeServerCodegenTest {
 
@@ -26,70 +29,72 @@ public class JavaHelidonSeServerCodegenTest {
         output.deleteOnExit();
         outputPath = output.getAbsolutePath().replace('\\', '/');
 
-        final CodegenConfigurator configurator = new CodegenConfigurator()
-                .setGeneratorName("java-helidon-server")
-                .setLibrary("se")
-                .setInputSpec("src/test/resources/3_0/helidon/petstore-for-testing.yaml")
-                .setOutputDir(outputPath);
+        final CodegenConfigurator configurator = codegenConfigurator(new HashMap<>());
 
         final ClientOptInput clientOptInput = configurator.toClientOptInput();
         generator = new DefaultGenerator();
         generator.opts(clientOptInput);
     }
 
-    @Test
-    public void doGenerateFullProject() {
-        Map<String, Object> additionalProperties = new HashMap<>();
-        additionalProperties.put("fullProject", true);
-        final CodegenConfigurator configurator = new CodegenConfigurator()
+    private CodegenConfigurator codegenConfigurator(Map<String, Object> additionalProperties) {
+        return new CodegenConfigurator()
                 .setGeneratorName("java-helidon-server")
                 .setLibrary("se")
                 .setAdditionalProperties(additionalProperties)
                 .setInputSpec("src/test/resources/3_0/helidon/petstore-for-testing.yaml")
                 .setOutputDir(outputPath);
-        generator.opts(configurator.toClientOptInput()).generate();
+    }
 
-        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
+
+    @Test
+    public void testGenerateFullProject() {
+        generator.generate();
+
+        JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetServiceImpl.java"))
                       .fileContains(
-                              "public class PetService implements Service",
+                              "public class PetServiceImpl",
                               "response.status(HTTP_CODE_NOT_IMPLEMENTED).send();"
                       );
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/Main.java"))
                       .fileContains(
-                              "import org.openapitools.server.api.PetService;",
-                              ".register(\"/\", new PetService(config))"
+                              "import org.openapitools.server.api.PetServiceImpl;",
+                              ".register(\"/\", new PetServiceImpl())"
                       );
-        TestUtils.assertFileNotContains(
-                Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"),
-                "    abstract Void handleError(ServerRequest request, ServerResponse response, Throwable throwable);");
     }
 
     @Test
-    public void doGenerateInterfaceOnly() {
-        Map<String, Object> additionalProperties = new HashMap<>();
-        additionalProperties.put("interfaceOnly", true);
-        final CodegenConfigurator configurator = new CodegenConfigurator()
-                .setGeneratorName("java-helidon-server")
-                .setLibrary("se")
-                .setAdditionalProperties(additionalProperties)
-                .setInputSpec("src/test/resources/3_0/helidon/petstore-for-testing.yaml")
-                .setOutputDir(outputPath);
-        generator.opts(configurator.toClientOptInput()).generate();
+    public void testGenerateProjectByDefault() {
+        generator.generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .fileContains(
-                              "public interface PetService extends Service",
-                              "default void update(Routing.Rules rules)",
+                              "public interface PetService extends Service {",
+                              "default void update(Routing.Rules rules) {",
+                              "void addPet(ServerRequest request, ServerResponse response, Pet pet);",
                               "void deletePet(ServerRequest request, ServerResponse response);"
                       );
-        TestUtils.assertFileNotExists(Paths.get(outputPath + "/src/main/java/org/openapitools/server/Main.java"));
-        TestUtils.assertFileNotContains(Paths.get(outputPath + "/pom.xml"), "<mainClass>org.openapitools.server" +
-                ".Main</mainClass>");
+        TestUtils.assertFileNotExists(Paths.get(outputPath + "/build.gradle"));
+        TestUtils.assertFileNotExists(Paths.get(outputPath + "/settings.gradle"));
     }
 
     @Test
-    public void doGeneratePathParams() throws IOException {
-        generator.generate();
+    public void testGenerateGradleProject() {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("gradleProject", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
+
+        assertTrue(Paths.get(outputPath + "/build.gradle").toFile().exists());
+        assertTrue(Paths.get(outputPath + "/settings.gradle").toFile().exists());
+        TestUtils.assertFileNotExists(Paths.get(outputPath + "/pom.xml"));
+    }
+
+    @Test
+    public void testGeneratePathParams() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
@@ -108,8 +113,11 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
-    public void doGenerateQueryParams() throws IOException {
-        generator.generate();
+    public void testGenerateQueryParams() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .fileContains("import java.util.List;")
@@ -129,8 +137,11 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
-    public void doGenerateBodyParams() throws IOException {
-        generator.generate();
+    public void testGenerateBodyParams() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("update")
@@ -177,8 +188,11 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
-    public void doGenerateHeaderParams() throws IOException {
-        generator.generate();
+    public void testGenerateHeaderParams() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
@@ -190,8 +204,11 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
-    public void doGenerateCookiesParams() throws IOException {
-        generator.generate();
+    public void testGenerateCookiesParams() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("deletePet", "ServerRequest", "ServerResponse")
@@ -209,8 +226,11 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
-    public void doGenerateFormParams() throws IOException {
-        generator.generate();
+    public void testGenerateFormParams() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("addPets", "ServerRequest", "ServerResponse")
@@ -237,8 +257,11 @@ public class JavaHelidonSeServerCodegenTest {
     }
 
     @Test
-    public void doGenerateParamsValidation() throws IOException {
-        generator.generate();
+    public void testGenerateParamsValidation() throws IOException {
+        Map<String, Object> additionalProperties = new HashMap<>();
+        additionalProperties.put("useAbstractClass", true);
+        final CodegenConfigurator configurator = codegenConfigurator(additionalProperties);
+        generator.opts(configurator.toClientOptInput()).generate();
 
         JavaFileAssert.assertThat(Paths.get(outputPath + "/src/main/java/org/openapitools/server/api/PetService.java"))
                       .assertMethod("findPetsByStatus")
