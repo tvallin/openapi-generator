@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.media.Schema;
@@ -40,7 +41,9 @@ import org.openapitools.codegen.CliOption;
 import org.openapitools.codegen.CodegenConstants;
 import org.openapitools.codegen.CodegenModel;
 import org.openapitools.codegen.CodegenOperation;
+import org.openapitools.codegen.CodegenParameter;
 import org.openapitools.codegen.CodegenProperty;
+import org.openapitools.codegen.CodegenResponse;
 import org.openapitools.codegen.CodegenType;
 import org.openapitools.codegen.SupportingFile;
 import org.openapitools.codegen.VendorExtension;
@@ -70,6 +73,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     protected boolean useGzipFeature = false;
     protected boolean caseInsensitiveResponseHeaders = false;
     protected Path invokerFolder;
+    protected Path apiFolder;
     protected String serializationLibrary = null;
     protected String rootJavaEEPackage;
 
@@ -186,6 +190,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
 
         String invokerPath = invokerPackage.replace('.', File.separatorChar);
         invokerFolder = Paths.get(sourceFolder, invokerPath);
+        apiFolder = Paths.get(outputFolder).relativize(Paths.get(apiFileFolder()));
 
         if (isLibrary(HELIDON_MP)) {
             String apiExceptionFolder = Paths.get(sourceFolder,
@@ -218,7 +223,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             unmodifiable.add(new SupportingFile("ApiResponseBase.mustache", invokerFolder.toString(), "ApiResponseBase.java"));
             unmodifiable.add(new SupportingFile("ApiClient.mustache", invokerFolder.toString(), "ApiClient.java"));
             unmodifiable.add(new SupportingFile("Pair.mustache", invokerFolder.toString(), "Pair.java"));
-            unmodifiable.add(new SupportingFile("ResponseType.mustache", apiFileFolder(), "ResponseType.java"));
+            unmodifiable.add(new SupportingFile("ResponseType.mustache", apiFolder.toString(), "ResponseType.java"));
 
             processSupportingFiles(modifiable, unmodifiable);
         }
@@ -309,6 +314,7 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
             op.imports.add("Map");
         }
         if (op.getHasQueryParams()) {
+            requiredImplImports.add("List");
             requiredImplImports.add("ArrayList");
             requiredImplImports.add("Pair");
         }
@@ -321,8 +327,29 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         if (op.getHasCookieParams()) {
             requiredImplImports.add("StringJoiner");
         }
+        if (op.bodyParams.stream().anyMatch(JavaHelidonClientCodegen::checkIsArray)
+            || op.allParams.stream().anyMatch(JavaHelidonClientCodegen::checkIsArray)
+            || op.responses.stream().anyMatch(CodegenResponse::getIsArray)) {
+            requiredImplImports.add("List");
+            op.imports.add("List");
+        }
+        if (op.bodyParams.stream().anyMatch(JavaHelidonClientCodegen::checkIsMap)
+            || op.allParams.stream().anyMatch(JavaHelidonClientCodegen::checkIsMap)
+            || op.responses.stream().anyMatch(CodegenResponse::getIsMap)) {
+            requiredImplImports.add("Map");
+            op.imports.add("Map");
+        }
+
         op.vendorExtensions.put(X_HELIDON_REQUIRED_IMPL_IMPORTS, requiredImplImports);
         return op;
+    }
+
+    private static boolean checkIsArray(CodegenParameter p) {
+        return p.isArray || !(p.getSchema() != null && p.getSchema().getIsArray());
+    }
+
+    private static boolean checkIsMap(CodegenParameter p) {
+        return p.isMap || !(p.getSchema() != null && p.getSchema().getIsMap());
     }
 
     @Override

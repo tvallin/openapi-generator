@@ -16,13 +16,14 @@
 
 package org.openapitools.codegen.java.helidon.functional;
 
+
 import org.testng.annotations.BeforeClass;
 
-public class FunctionalHelidonMPClientTest extends FunctionalHelidonClientBase {
+public class FunctionalHelidonSEClientTest extends FunctionalHelidonClientBase {
 
     @BeforeClass
     public void setup() {
-        library("mp");
+        library("se");
         generatorName("java-helidon-client");
     }
 }
