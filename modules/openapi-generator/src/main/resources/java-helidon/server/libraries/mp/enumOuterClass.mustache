@@ -2,6 +2,9 @@
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 {{/jackson}}
+{{#jsonb}}
+import {{rootJavaEEPackage}}.json.bind.annotation.JsonbCreator;
+{{/jsonb}}
 
 /**
  * {{description}}{{^description}}Gets or Sets {{{name}}}{{/description}}
@@ -41,12 +44,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 	}
 	
   @Override
-  @JsonValue
+  {{#jackson}}@JsonValue{{/jackson}}
   public String toString() {
     return String.valueOf(value);
   }
 
-  @JsonCreator
+  {{#jackson}}@JsonCreator{{/jackson}}{{#jsonb}}@JsonbCreator{{/jsonb}}
   public static {{{datatypeWithEnum}}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}} fromValue({{{dataType}}} value) {
     for ({{{datatypeWithEnum}}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}} b : {{{datatypeWithEnum}}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}}.values()) {
       if (b.value.equals(value)) {

@@ -16,7 +16,7 @@
     }
 
     @Override
-    @JsonValue
+    {{#jackson}}@JsonValue{{/jackson}}
     public String toString() {
         return String.valueOf(value);
     }
@@ -36,7 +36,7 @@
         {{#isNullable}}return null;{{/isNullable}}{{^isNullable}}throw new IllegalArgumentException("Unexpected string value '" + s + "'");{{/isNullable}}
 	}
 	
-    @JsonCreator
+    {{#jackson}}@JsonCreator{{/jackson}}
     public static {{datatypeWithEnum}} fromValue({{dataType}} value) {
         for ({{{datatypeWithEnum}}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}} b : {{{datatypeWithEnum}}}{{^datatypeWithEnum}}{{{classname}}}{{/datatypeWithEnum}}.values()) {
             if (b.value.equals(value)) {

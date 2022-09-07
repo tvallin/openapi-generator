@@ -16,11 +16,14 @@ import java.util.Objects;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
 
+import static org.openapitools.codegen.CodegenConstants.SERIALIZATION_LIBRARY;
+
 public class JavaHelidonMpServerCodegenTest {
 
     private DefaultGenerator generator;
     private String outputPath;
     private String apiPackage;
+    private String modelPackage;
 
     @BeforeMethod
     public void setup() throws IOException {
@@ -28,6 +31,7 @@ public class JavaHelidonMpServerCodegenTest {
         output.deleteOnExit();
         outputPath = output.getAbsolutePath().replace('\\', '/');
         apiPackage = outputPath + "/src/main/java/org/openapitools/server/api";
+        modelPackage = outputPath + "/src/main/java/org/openapitools/server/model";
         generator = new DefaultGenerator();
     }
 
@@ -58,6 +62,23 @@ public class JavaHelidonMpServerCodegenTest {
 
         File outputFile = Paths.get(outputPath).toFile();
         assertThat(Objects.requireNonNull(outputFile.listFiles()).length, is(1));
+    }
+
+    @Test
+    public void testJackson() {
+        generate(createConfigurator().addAdditionalProperty(SERIALIZATION_LIBRARY, "jackson"));
+
+        JavaFileAssert.assertThat(Paths.get(modelPackage + "/Color.java"))
+                .fileContains("com.fasterxml.jackson.annotation.JsonCreator")
+                .fileContains("com.fasterxml.jackson.annotation.JsonValue");
+    }
+
+    @Test
+    public void testJsonb() {
+        generate(createConfigurator().addAdditionalProperty(SERIALIZATION_LIBRARY, "jsonb"));
+
+        JavaFileAssert.assertThat(Paths.get(modelPackage + "/Color.java"))
+                .fileContains("javax.json.bind.annotation.JsonbCreator");
     }
 
     @Test

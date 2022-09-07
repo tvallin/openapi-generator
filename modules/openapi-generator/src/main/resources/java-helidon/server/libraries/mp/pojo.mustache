@@ -51,10 +51,11 @@ public class {{classname}} {{#parent}}extends {{{.}}}{{/parent}}{{#vendorExtensi
   public {{classname}}() {
   }
 
-  @JsonbCreator
+  {{#jsonb}}@JsonbCreator{{/jsonb}}{{#jackson}}@JsonCreator{{/jackson}}
   public {{classname}}(
   {{#readOnlyVars}}
-    @JsonbProperty("{{baseName}}") {{{datatypeWithEnum}}} {{name}}{{^-last}}, {{/-last}}
+    {{#jsonb}}@JsonbProperty("{{baseName}}") {{{datatypeWithEnum}}} {{name}}{{^-last}}, {{/-last}}{{/jsonb}}
+    {{#jackson}}@JsonProperty(value="{{baseName}}") {{{datatypeWithEnum}}} {{name}}{{^-last}}, {{/-last}}{{/jackson}}
   {{/readOnlyVars}}
   ) {
   {{#readOnlyVars}}

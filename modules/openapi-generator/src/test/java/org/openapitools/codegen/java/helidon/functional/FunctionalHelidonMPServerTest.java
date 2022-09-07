@@ -17,19 +17,15 @@
 package org.openapitools.codegen.java.helidon.functional;
 
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.openapitools.codegen.CodegenConstants.SERIALIZATION_LIBRARY;
 
 public class FunctionalHelidonMPServerTest extends FunctionalBase {
 
@@ -90,5 +86,17 @@ public class FunctionalHelidonMPServerTest extends FunctionalBase {
         Path pom4 = outputPath.resolve("pom.xml");
         assertThat(Files.exists(pom4), is(true));
         assertThat(pom4.toFile().lastModified(), is(not(lastModified)));    // overwritten
+    }
+
+    @Test
+    void buildJsonbProject() {
+        generate(createConfigurator().addAdditionalProperty(SERIALIZATION_LIBRARY, "jsonb"));
+        buildAndVerify("target/openapi-java-server.jar");
+    }
+
+    @Test
+    void buildJacksonProject() {
+        generate(createConfigurator().addAdditionalProperty(SERIALIZATION_LIBRARY, "jackson"));
+        buildAndVerify("target/openapi-java-server.jar");
     }
 }
