@@ -1,16 +1,20 @@
 package org.openapitools.codegen.java.helidon;
 
 import org.openapitools.codegen.DefaultGenerator;
+import org.openapitools.codegen.TestUtils;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.openapitools.codegen.java.assertions.JavaFileAssert;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Objects;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.MatcherAssert.assertThat;
 
 public class JavaHelidonMpServerCodegenTest {
 
@@ -37,6 +41,7 @@ public class JavaHelidonMpServerCodegenTest {
 
     private void generate(CodegenConfigurator config) {
         generator.opts(config.toClientOptInput());
+        generator.setGenerateMetadata(false);
         generator.generate();
     }
 
@@ -44,11 +49,20 @@ public class JavaHelidonMpServerCodegenTest {
         generate(createConfigurator());
     }
 
-    //TODO remove it or change after MP implements new fullProject option
-    @Ignore
+    @Test
+    public void testRestApiFilesOnly() {
+        generate(createConfigurator().addAdditionalProperty("fullProject", "false"));
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
+                .fileContains("public class PetService");
+
+        File outputFile = Paths.get(outputPath).toFile();
+        assertThat(Objects.requireNonNull(outputFile.listFiles()).length, is(1));
+    }
+
     @Test
     public void testAbstractClass() {
-        generate(createConfigurator().addAdditionalProperty("fullProject", "false"));
+        generate(createConfigurator().addAdditionalProperty("useAbstractClass", "true"));
 
         JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
                 .fileContains("public abstract class PetService")
@@ -59,7 +73,13 @@ public class JavaHelidonMpServerCodegenTest {
                 .fileContains("public abstract class StoreService")
                 .assertMethod("placeOrder", "Order")
                 .doesNotHaveImplementation()
-                .hasReturnType("Order");
+                .hasReturnType("Response");
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreServiceImpl.java"))
+                .fileContains("public class StoreServiceImpl extends StoreService")
+                .assertMethod("placeOrder", "Order")
+                .hasReturnType("Response")
+                .bodyContainsLines("return Response.ok().entity(\"magic!\").build();");
     }
 
     @Test
@@ -152,7 +172,22 @@ public class JavaHelidonMpServerCodegenTest {
                 .fileContains("public interface StoreService")
                 .assertMethod("placeOrder", "Order")
                 .doesNotHaveImplementation()
-                .hasReturnType("Order");
+                .hasReturnType("Response");
+
+        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreServiceImpl.java"))
+                .fileContains("public class StoreServiceImpl implements StoreService")
+                .assertMethod("placeOrder", "Order")
+                .hasReturnType("Response")
+                .bodyContainsLines("return Response.ok().entity(\"magic!\").build();");
+    }
+
+    @Test
+    public void testGenerateGradleProject() {
+        generate(createConfigurator().addAdditionalProperty("gradleProject", "true"));
+
+        assertThat(Paths.get(outputPath + "/build.gradle").toFile().exists(), is(true));
+        assertThat(Paths.get(outputPath + "/settings.gradle").toFile().exists(), is(true));
+        TestUtils.assertFileNotExists(Paths.get(outputPath + "/pom.xml"));
     }
 
 }

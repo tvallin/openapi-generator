@@ -50,7 +50,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JavaHelidonServerCodegen.class);
 
-    //TODO remove it if MP does not support it
     public static final String INTERFACE_ONLY = "interfaceOnly";
     public static final String USE_ABSTRACT_CLASS = "useAbstractClass";
     public static final String GRADLE_PROJECT = "gradleProject";
@@ -59,7 +58,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
     protected String implFolder = "src/main/java";
     protected String serializationLibrary = null;
 
-    //TODO remove it if MP does not support it
     private boolean interfaceOnly = false;
     private boolean useAbstractClass = false;
     private boolean gradleProject = false;
@@ -138,6 +136,7 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         supportingFiles.clear();
         dateLibrary = "java8";
 
+        addApiTemplateFiles();
         SupportingFile pomFile = new SupportingFile("pom.mustache", "", "pom.xml");
         SupportingFile readmeFile = new SupportingFile("README.mustache", "", "README.md");
         SupportingFile openApiFile = new SupportingFile("openapi.mustache",
@@ -183,6 +182,10 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         }
         if (!gradleProject) {
             additionalProperties.remove(GRADLE_PROJECT);
+        } else {
+            modifiable.add(new SupportingFile("build.gradle.mustache", "", "build.gradle"));
+            modifiable.add(new SupportingFile("settings.gradle.mustache", "", "settings.gradle"));
+            modifiable.remove(pomFile);
         }
 
         if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
@@ -210,9 +213,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         } else if (isLibrary(HELIDON_SE)) {
             artifactId = "openapi-helidon-se-server";
 
-            //TODO move this lines from this clause if MP will support it
-            addApiTemplateFiles();
-
             modifiable.add(new SupportingFile("application.mustache",
                     ("src.main.resources").replace(".", java.io.File.separator), "application.yaml"));
             modifiable.add(new SupportingFile("mainTest.mustache",
@@ -237,12 +237,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
                 importMapping.put("ByteArrayInputStream", "java.io.ByteArrayInputStream");
             }
             importMapping.put("Handler", "io.helidon.webserver.Handler");
-            //TODO after adding gradle support for Helidon MP move these lines from this clause to the top of the method
-            if (gradleProject) {
-                modifiable.add(new SupportingFile("build.gradle.mustache", "", "build.gradle"));
-                modifiable.add(new SupportingFile("settings.gradle.mustache", "", "settings.gradle"));
-                modifiable.remove(pomFile);
-            }
             processSupportingFiles(modifiable, unmodifiable);
         } else if (isLibrary(HELIDON_NIMA)) {
             throw new UnsupportedOperationException("Not implemented");

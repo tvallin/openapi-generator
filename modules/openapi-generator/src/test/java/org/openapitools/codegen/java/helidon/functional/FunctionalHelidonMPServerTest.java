@@ -20,11 +20,15 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
-import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.not;
 import static org.hamcrest.MatcherAssert.assertThat;
 
 public class FunctionalHelidonMPServerTest extends FunctionalBase {
@@ -48,11 +52,9 @@ public class FunctionalHelidonMPServerTest extends FunctionalBase {
         buildAndVerify("target/openapi-java-server.jar");
     }
 
-    //TODO remove it or change after MP implements new fullProject option
-    @Ignore
     @Test
     void buildProjectAbstractClasses() {
-        generate(createConfigurator().addAdditionalProperty(FULL_PROJECT, "false"));
+        generate(createConfigurator().addAdditionalProperty(USE_ABSTRACT_CLASS, "true"));
         buildAndVerify("target/openapi-java-server.jar");
     }
 
@@ -60,5 +62,33 @@ public class FunctionalHelidonMPServerTest extends FunctionalBase {
     void buildFullProject() {
         generate(createConfigurator().addAdditionalProperty(FULL_PROJECT, "true"));
         buildAndVerify("target/openapi-java-server.jar");
+    }
+
+    @Test
+    void verifyFullProjectSemantics() {
+        // Generate project for first time and record pom's timestamp
+        generate(createConfigurator());
+        buildAndVerify("target/openapi-java-server.jar");
+        Path pom1 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom1), is(true));
+        long lastModified = pom1.toFile().lastModified();
+
+        // Re-generate project over same directory with fullProject unspecified
+        generate(createConfigurator(outputPath));
+        Path pom2 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom2), is(true));
+        assertThat(pom2.toFile().lastModified(), is(lastModified));         // not overwritten
+
+        // Re-generate project over same directory with fullProject false
+        generate(createConfigurator(outputPath).addAdditionalProperty(FULL_PROJECT, "false"));
+        Path pom3 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom3), is(true));
+        assertThat(pom3.toFile().lastModified(), is(lastModified));         // not overwritten
+
+        // Re-generate project over same directory with fullProject true
+        generate(createConfigurator(outputPath).addAdditionalProperty(FULL_PROJECT, "true"));
+        Path pom4 = outputPath.resolve("pom.xml");
+        assertThat(Files.exists(pom4), is(true));
+        assertThat(pom4.toFile().lastModified(), is(not(lastModified)));    // overwritten
     }
 }
