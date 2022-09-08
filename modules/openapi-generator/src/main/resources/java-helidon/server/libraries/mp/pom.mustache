@@ -17,6 +17,10 @@
     <version>{{artifactVersion}}</version>
     <packaging>jar</packaging>
 
+    <properties>
+        <version.jackson.databind.nullable>0.2.3</version.jackson.databind.nullable>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.helidon.microprofile.bundles</groupId>
@@ -34,6 +38,13 @@
             <groupId>jakarta.ws.rs</groupId>
             <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
+{{#openApiNullable}}
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>${version.jackson.databind.nullable}</version>
+        </dependency>
+{{/openApiNullable}}
 {{#jackson}}
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>

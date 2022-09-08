@@ -18,10 +18,9 @@
     {{/appDescription}}
 
     <properties>
-{{^interfaceOnly}}
         <mainClass>{{{invokerPackage}}}.Main</mainClass>
-{{/interfaceOnly}}
         <version.validation.api>2.0.1.Final</version.validation.api>
+        <version.jackson.databind.nullable>0.2.3</version.jackson.databind.nullable>
     </properties>
 
     <dependencies>
@@ -62,6 +61,13 @@
             <groupId>io.helidon.openapi</groupId>
             <artifactId>helidon-openapi</artifactId>
         </dependency>
+{{#openApiNullable}}
+        <dependency>
+            <groupId>org.openapitools</groupId>
+            <artifactId>jackson-databind-nullable</artifactId>
+            <version>${version.jackson.databind.nullable}</version>
+        </dependency>
+{{/openApiNullable}}
 {{#jackson}}
         <dependency>
             <groupId>io.helidon.media</groupId>
