@@ -43,12 +43,6 @@ public class FunctionalHelidonMPServerTest extends FunctionalBase {
     }
 
     @Test
-    void buildProjectInterfaceOnly() {
-        generate(createConfigurator().addAdditionalProperty(INTERFACE_ONLY, "true"));
-        buildAndVerify("target/openapi-java-server.jar");
-    }
-
-    @Test
     void buildProjectAbstractClasses() {
         generate(createConfigurator().addAdditionalProperty(USE_ABSTRACT_CLASS, "true"));
         buildAndVerify("target/openapi-java-server.jar");

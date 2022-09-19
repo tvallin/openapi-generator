@@ -22,11 +22,11 @@ import javax.validation.Valid;{{/useBeanValidation}}
 @Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}{{#hasProduces}}
 @Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}
 {{>generatedAnnotation}}
-public {{#interfaceOnly}}interface{{/interfaceOnly}}{{^interfaceOnly}}{{#useAbstractClass}}abstract {{/useAbstractClass}}class{{/interfaceOnly}} {{classname}} {
+public {{^useAbstractClass}}interface{{/useAbstractClass}}{{#useAbstractClass}}abstract class{{/useAbstractClass}} {{classname}} {
 {{#operations}}
 {{#operation}}
 
-{{#interfaceOnly}}{{>apiAbstract}}{{/interfaceOnly}}{{^interfaceOnly}}{{#useAbstractClass}}{{>apiAbstract}}{{/useAbstractClass}}{{^useAbstractClass}}{{>apiMethod}}{{/useAbstractClass}}{{/interfaceOnly}}
+{{>apiAbstract}}
 {{/operation}}
 }
 {{/operations}}

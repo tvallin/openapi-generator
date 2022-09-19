@@ -50,7 +50,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
 
     private final Logger LOGGER = LoggerFactory.getLogger(JavaHelidonServerCodegen.class);
 
-    public static final String INTERFACE_ONLY = "interfaceOnly";
     public static final String USE_ABSTRACT_CLASS = "useAbstractClass";
     public static final String GRADLE_PROJECT = "gradleProject";
 
@@ -58,7 +57,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
     protected String implFolder = "src/main/java";
     protected String serializationLibrary = null;
 
-    private boolean interfaceOnly = false;
     private boolean useAbstractClass = false;
     private boolean gradleProject = false;
 
@@ -89,8 +87,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
 
         cliOptions.add(CliOption.newBoolean(USE_BEANVALIDATION, "Use Bean Validation"));
         cliOptions.add(CliOption.newBoolean(PERFORM_BEANVALIDATION, "Perform BeanValidation"));
-        cliOptions.add(CliOption.newBoolean(INTERFACE_ONLY,
-                "Whether to generate only API interface stubs without the server files.", interfaceOnly));
         cliOptions.add(CliOption.newBoolean(USE_ABSTRACT_CLASS,
                 "Whether to generate abstract classes for REST API instead of interfaces.", useAbstractClass));
         cliOptions.add(CliOption.newBoolean(GRADLE_PROJECT,
@@ -162,13 +158,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         importMapping.put("ObjectMapper", "com.fasterxml.jackson.databind.ObjectMapper");
         importMapping.put("Jsonb", "javax.json.bind.Jsonb");
         importMapping.put("JsonbBuilder", "javax.json.bind.JsonbBuilder");
-
-        if (additionalProperties.containsKey(INTERFACE_ONLY)) {
-            interfaceOnly = Boolean.parseBoolean(additionalProperties.get(INTERFACE_ONLY).toString());
-        }
-        if (!interfaceOnly) {
-            additionalProperties.remove(INTERFACE_ONLY);
-        }
 
         if (additionalProperties.containsKey(USE_ABSTRACT_CLASS)) {
             useAbstractClass = Boolean.parseBoolean(additionalProperties.get(USE_ABSTRACT_CLASS).toString());

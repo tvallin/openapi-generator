@@ -57,7 +57,6 @@ abstract class FunctionalBase {
     private static final String MAVEN_BINARY_NAME;
     private static final boolean IS_WINDOWS_OS;
 
-    protected static final String INTERFACE_ONLY = "InterfaceOnly";
     protected static final String FULL_PROJECT = "fullProject";
     protected static final String USE_ABSTRACT_CLASS = "useAbstractClass";
 
@@ -267,45 +266,26 @@ abstract class FunctionalBase {
     }
 
     /**
-     * {@link Process} wrapper to read I/O Stream
+     * {@link Process} wrapper to read I/O Stream.
      */
     static class ProcessReader {
 
         private final Process process;
         private final BufferedReader consoleReader;
-        private final BufferedReader errorReader;
 
         ProcessReader(Process process) {
             this.process = process;
             this.consoleReader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
-            this.errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
         }
 
         public String readOutputConsole() {
             return consoleReader.lines().collect(Collectors.joining("\n"));
         }
 
-        public String readErrorConsole() {
-            return errorReader.lines().collect(Collectors.joining("\n"));
-        }
-
-        public Process process() {
-            return process;
-        }
-
         @SuppressWarnings("UnusedReturnValue")
         public boolean waitFor(long timeout, TimeUnit unit) {
             try {
                 return process.waitFor(timeout, unit);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        }
-
-        @SuppressWarnings("UnusedReturnValue")
-        public int waitFor() {
-            try {
-                return process.waitFor();
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }

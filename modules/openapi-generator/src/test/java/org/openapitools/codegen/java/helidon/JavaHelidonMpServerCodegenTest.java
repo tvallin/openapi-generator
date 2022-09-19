@@ -58,7 +58,7 @@ public class JavaHelidonMpServerCodegenTest {
         generate(createConfigurator().addAdditionalProperty("fullProject", "false"));
 
         JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
-                .fileContains("public class PetService");
+                .fileContains("public interface PetService");
 
         File outputFile = Paths.get(outputPath).toFile();
         assertThat(Objects.requireNonNull(outputFile.listFiles()).length, is(1));
@@ -108,11 +108,11 @@ public class JavaHelidonMpServerCodegenTest {
         generate(createConfigurator().addAdditionalProperty("fullProject", "true"));
 
         JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
-                .fileContains("public class PetService")
+                .fileContains("public interface PetService")
                 .assertMethod("addPet", "Pet");
 
         JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreService.java"))
-                .fileContains("public class StoreService")
+                .fileContains("public interface StoreService")
                 .assertMethod("placeOrder", "Order")
                 .hasReturnType("Response");
     }
@@ -178,28 +178,6 @@ public class JavaHelidonMpServerCodegenTest {
                 .assertMethod("logoutUser")
                 .toFileAssert()
                 .assertMethod("updateUser", "String", "User");
-    }
-
-    @Test
-    public void doGenerateInterfaceOnly() {
-        generate(createConfigurator().addAdditionalProperty("interfaceOnly", "true"));
-
-        JavaFileAssert.assertThat(Paths.get(apiPackage + "/PetService.java"))
-                .fileContains("public interface PetService")
-                .assertMethod("addPet", "Pet")
-                .doesNotHaveImplementation();
-
-        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreService.java"))
-                .fileContains("public interface StoreService")
-                .assertMethod("placeOrder", "Order")
-                .doesNotHaveImplementation()
-                .hasReturnType("Response");
-
-        JavaFileAssert.assertThat(Paths.get(apiPackage + "/StoreServiceImpl.java"))
-                .fileContains("public class StoreServiceImpl implements StoreService")
-                .assertMethod("placeOrder", "Order")
-                .hasReturnType("Response")
-                .bodyContainsLines("return Response.ok().entity(\"magic!\").build();");
     }
 
     @Test

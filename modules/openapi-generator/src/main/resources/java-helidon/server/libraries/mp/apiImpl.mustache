@@ -22,7 +22,7 @@ import javax.validation.Valid;{{/useBeanValidation}}
 @Consumes({ {{#consumes}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/consumes}} }){{/hasConsumes}}{{#hasProduces}}
 @Produces({ {{#produces}}"{{{mediaType}}}"{{^-last}}, {{/-last}}{{/produces}} }){{/hasProduces}}
 {{>generatedAnnotation}}
-public class {{classname}}Impl {{#interfaceOnly}}implements{{/interfaceOnly}}{{^interfaceOnly}}extends{{/interfaceOnly}} {{classname}} {
+public class {{classname}}Impl {{^useAbstractClass}}implements{{/useAbstractClass}}{{#useAbstractClass}}extends{{/useAbstractClass}} {{classname}} {
 {{#operations}}
 {{#operation}}
 
