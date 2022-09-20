@@ -75,7 +75,6 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     protected Path invokerFolder;
     protected Path apiFolder;
     protected String serializationLibrary = null;
-    protected String rootJavaEEPackage;
 
     /**
      * Constructor for this generator. Uses the embedded template dir to find common templates
@@ -101,7 +100,6 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
         artifactId = "openapi-java-client";
         apiPackage = invokerPackage + ".api";
         modelPackage = invokerPackage + ".model";
-        rootJavaEEPackage = MICROPROFILE_ROOT_PACKAGE_DEFAULT;
 
         updateOption(CodegenConstants.INVOKER_PACKAGE, getInvokerPackage());
         updateOption(CodegenConstants.ARTIFACT_ID, getArtifactId());
@@ -175,10 +173,6 @@ public class JavaHelidonClientCodegen extends JavaHelidonCommonCodegen {
     @Override
     public void processOpts() {
         super.processOpts();
-
-        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
-            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, rootJavaEEPackage);
-        }
 
         if (additionalProperties.containsKey(SERIALIZATION_LIBRARY)) {
             setSerializationLibrary(additionalProperties.get(SERIALIZATION_LIBRARY).toString());

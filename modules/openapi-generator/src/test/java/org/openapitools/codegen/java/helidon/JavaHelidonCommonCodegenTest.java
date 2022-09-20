@@ -84,7 +84,7 @@ public class JavaHelidonCommonCodegenTest {
 
     private void runVersionTest(String helidonVersion, String parentVersion) {
         Map<String, Object> additionalProperties = new HashMap<>();
-        String expected = "2.5.2";
+        String expected = "3.0.1";
         if (parentVersion != null) {
             additionalProperties.put(CodegenConstants.PARENT_VERSION, parentVersion);
             expected = parentVersion;

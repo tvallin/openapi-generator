@@ -177,10 +177,6 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
             modifiable.remove(pomFile);
         }
 
-        if (!additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
-            additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, MICROPROFILE_ROOT_PACKAGE_DEFAULT);
-        }
-
         if (additionalProperties.containsKey(CodegenConstants.SERIALIZATION_LIBRARY)) {
             setSerializationLibrary(additionalProperties.get(CodegenConstants.SERIALIZATION_LIBRARY).toString());
         }

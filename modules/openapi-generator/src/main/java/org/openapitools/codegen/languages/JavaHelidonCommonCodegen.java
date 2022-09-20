@@ -51,13 +51,19 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
 
     static final String MICROPROFILE_ROOT_PACKAGE = "rootJavaEEPackage";
     static final String MICROPROFILE_ROOT_PACKAGE_DESC = "Root package name for Java EE";
-    static final String MICROPROFILE_ROOT_PACKAGE_DEFAULT = "javax";
+    static final String MICROPROFILE_ROOT_PACKAGE_JAVAX = "javax";
+    static final String MICROPROFILE_ROOT_PACKAGE_JAKARTA = "jakarta";
+
+    // for generated doc
+    static final String MICROPROFILE_ROOT_PACKAGE_DEFAULT =
+        "Helidon 2.x and earlier: " + MICROPROFILE_ROOT_PACKAGE_JAVAX
+        + "; Helidon 3.x and later: " + MICROPROFILE_ROOT_PACKAGE_JAKARTA;
 
     static final String SERIALIZATION_LIBRARY_JACKSON = "jackson";
     static final String SERIALIZATION_LIBRARY_JSONB = "jsonb";
 
     static final String HELIDON_VERSION = "helidonVersion";
-    static final String DEFAULT_HELIDON_VERSION = "2.5.2";
+    static final String DEFAULT_HELIDON_VERSION = "3.0.1";
     static final String HELIDON_VERSION_DESC = "Helidon version for generated code";
 
     static final String FULL_PROJECT = "fullProject";
@@ -109,6 +115,7 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
         }
 
         additionalProperties.put(HELIDON_VERSION, helidonVersion);
+        setRootJavaEEPackage(helidonVersion);
     }
 
     /**
@@ -162,6 +169,39 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     private void setHelidonVersion(String version) {
         helidonVersion = version;
         setParentVersion(version);
+    }
+
+    private void setRootJavaEEPackage(String version) {
+
+        String rootEEPackageToUse = checkAndSelectRootEEPackage(version);
+        additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, rootEEPackageToUse);
+    }
+
+    private String checkAndSelectRootEEPackage(String version) {
+        String packagePrefixImpliedByVersion = usesJakarta(version)
+            ? MICROPROFILE_ROOT_PACKAGE_JAKARTA
+            : MICROPROFILE_ROOT_PACKAGE_JAVAX;
+
+        // Make sure any user-specified root EE package is correct for the chosen Helidon version.
+        if (additionalProperties.containsKey(MICROPROFILE_ROOT_PACKAGE)) {
+            String userRootEEPackage = additionalProperties.get(MICROPROFILE_ROOT_PACKAGE).toString();
+            if (!packagePrefixImpliedByVersion.equals(userRootEEPackage)) {
+                throw new IllegalArgumentException(
+                    String.format(Locale.ROOT,
+                        "Helidon version %s uses the %s namespace but options specified '%s'",
+                        version,
+                        packagePrefixImpliedByVersion,
+                        userRootEEPackage));
+            }
+            return userRootEEPackage;
+        } else {
+            // No explicit setting for the root EE package.
+            return packagePrefixImpliedByVersion;
+        }
+    }
+
+    private boolean usesJakarta(String version) {
+        return !version.startsWith("2.") && !version.startsWith("1.");
     }
 
     protected void removeCliOptions(String... opt) {
