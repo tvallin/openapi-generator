@@ -8,8 +8,8 @@ package {{package}};
 import {{invokerPackage}}.ApiClient;
 import {{invokerPackage}}.ApiResponse;
 
-import org.junit.Test;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 {{^fullJavaUtil}}
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public class {{classname}}Test {
     private static {{classname}} api;
     private static final String baseUrl = "http://localhost:8080";
 
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         apiClient = ApiClient.builder().build();
         api = {{classname}}Impl.create(apiClient);
