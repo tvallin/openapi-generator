@@ -25,11 +25,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -37,9 +39,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import org.openapitools.codegen.CodegenConfig;
 import org.openapitools.codegen.DefaultGenerator;
 import org.openapitools.codegen.config.CodegenConfigurator;
+import org.openapitools.codegen.languages.JavaHelidonCommonCodegen;
 import org.testng.SkipException;
 
 import static java.util.Objects.requireNonNull;
@@ -57,9 +59,21 @@ abstract class FunctionalBase {
     private static final String PATH_VAR = "PATH";
     private static final String MAVEN_BINARY_NAME;
     private static final boolean IS_WINDOWS_OS;
+    private static final List<Map.Entry<Integer, String>> DEFAULT_HELIDON_VERSIONS_FOR_JAVA_VERSIONS = new ArrayList<>();
 
     protected static final String FULL_PROJECT = "fullProject";
     protected static final String USE_ABSTRACT_CLASS = "useAbstractClass";
+
+    static {
+        /*
+            The inferred Helidon version for tests is from the entry for which the Java major version does not exceed
+            the current runtime Java major version.
+
+            For example, for Java 8 or 9 or 11: 2.5.3. For Java 13 or later: 3.0.1.
+         */
+        DEFAULT_HELIDON_VERSIONS_FOR_JAVA_VERSIONS.add(new AbstractMap.SimpleEntry<>(11, "2.5.3"));
+        DEFAULT_HELIDON_VERSIONS_FOR_JAVA_VERSIONS.add(new AbstractMap.SimpleEntry<>(13, "3.0.1"));
+    }
 
     private String library;
     private String generatorName;
@@ -98,7 +112,8 @@ abstract class FunctionalBase {
     }
 
     protected void generate(CodegenConfigurator config) {
-        enforceJavaVersion(config);
+        String helidonVersionToUse = chooseHelidonVersion(config);
+        enforceJavaVersion(helidonVersionToUse);
         DefaultGenerator generator = new DefaultGenerator();
         generator.opts(config.toClientOptInput());
         generator.generate();
@@ -205,20 +220,27 @@ abstract class FunctionalBase {
         return mvn.toString();
     }
 
-    private void enforceJavaVersion(CodegenConfigurator config) {
+    private String chooseHelidonVersion(CodegenConfigurator config) {
+        Map<String, Object> unprocessedAdditionalProperties = config.toContext()
+            .getGeneratorSettings()
+            .getAdditionalProperties();
+        if (unprocessedAdditionalProperties.containsKey(JavaHelidonCommonCodegen.HELIDON_VERSION)) {
+            return unprocessedAdditionalProperties.get(JavaHelidonCommonCodegen.HELIDON_VERSION).toString();
+        }
+        String result = inferredHelidonVersion();
+        config.addAdditionalProperty(JavaHelidonCommonCodegen.HELIDON_VERSION, result);
+        return result;
+    }
+
+    private void enforceJavaVersion(String helidonVersionToUse) {
         int currentJavaVersion = getCurrentJavaMajorVersion();
-        int requiredJavaVersion = getRequiredJavaVersion(config);
+        int requiredJavaVersion = getRequiredJavaVersion(helidonVersionToUse);
         String errorJavaVersion = String.format(Locale.ROOT, "Java version must be %s, test is skipped", requiredJavaVersion);
         assumeTrue(errorJavaVersion, currentJavaVersion == requiredJavaVersion);
     }
 
-    private int getRequiredJavaVersion(CodegenConfigurator config) {
-        CodegenConfig configuration = config.toClientOptInput().getConfig();
-        configuration.processOpts();
-        return configuration
-                .additionalProperties()
-                .get("helidonVersion")
-                .toString()
+    private int getRequiredJavaVersion(String helidonVersionToUse) {
+        return helidonVersionToUse
                 .startsWith("3.") ? 17 : 11;
     }
 
@@ -230,6 +252,23 @@ abstract class FunctionalBase {
         } else {
             return firstElement;
         }
+    }
+
+    private String inferredHelidonVersion() {
+        int javaMajorVersion = getCurrentJavaMajorVersion();
+        String result = null;
+        for (Map.Entry<Integer, String> javaToHelidonVersionMapping : DEFAULT_HELIDON_VERSIONS_FOR_JAVA_VERSIONS) {
+            if (javaToHelidonVersionMapping.getKey() <= javaMajorVersion) {
+                result = javaToHelidonVersionMapping.getValue();
+            }
+        }
+        if (result == null) {
+            String message = String.format(Locale.ROOT, "Unable to infer Helidon version from current Java major version %d using mapping %s",
+                javaMajorVersion, DEFAULT_HELIDON_VERSIONS_FOR_JAVA_VERSIONS);
+            LOGGER.log(Level.WARNING, message);
+            throw new SkipException(message);
+        }
+        return result;
     }
 
     /**

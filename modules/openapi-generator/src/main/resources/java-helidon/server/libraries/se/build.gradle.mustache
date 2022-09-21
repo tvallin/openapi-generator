@@ -38,7 +38,7 @@ repositories {
 dependencies {
     // import Helidon BOM
     implementation enforcedPlatform("io.helidon:helidon-dependencies:${project.helidonVersion}")
-    implementation "javax.validation:validation-api:${project.validationApiVersion}"
+    implementation "{{x-helidon-validationArtifactPrefix}}.validation:{{x-helidon-validationArtifactPrefix}}validation-api:${project.validationApiVersion}"
     implementation 'io.helidon.webserver:helidon-webserver'
     implementation 'io.helidon.media:helidon-media-jsonp'
 {{#jackson}}

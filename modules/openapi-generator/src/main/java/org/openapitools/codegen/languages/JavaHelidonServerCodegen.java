@@ -156,8 +156,8 @@ public class JavaHelidonServerCodegen extends JavaHelidonCommonCodegen {
         writePropertyBack(USE_BEANVALIDATION, useBeanValidation);
 
         importMapping.put("ObjectMapper", "com.fasterxml.jackson.databind.ObjectMapper");
-        importMapping.put("Jsonb", "javax.json.bind.Jsonb");
-        importMapping.put("JsonbBuilder", "javax.json.bind.JsonbBuilder");
+        importMapping.put("Jsonb", rootJavaEEPackage() + ".json.bind.Jsonb");
+        importMapping.put("JsonbBuilder", rootJavaEEPackage() + ".json.bind.JsonbBuilder");
 
         if (additionalProperties.containsKey(USE_ABSTRACT_CLASS)) {
             useAbstractClass = Boolean.parseBoolean(additionalProperties.get(USE_ABSTRACT_CLASS).toString());

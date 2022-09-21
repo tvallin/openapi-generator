@@ -17,9 +17,11 @@
     <version>{{artifactVersion}}</version>
     <packaging>jar</packaging>
 
+{{#openApiNullable}}
     <properties>
         <version.jackson.databind.nullable>0.2.3</version.jackson.databind.nullable>
     </properties>
+{{/openApiNullable}}
 
     <dependencies>
         <dependency>
@@ -31,12 +33,12 @@
             <artifactId>helidon-microprofile-cdi</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.enterprise</groupId>
-            <artifactId>jakarta.enterprise.cdi-api</artifactId>
+            <groupId>{{x-helidon-rootJavaEEDepPrefix}}.enterprise</groupId>
+            <artifactId>{{x-helidon-rootJavaEEDepPrefix}}.enterprise.cdi-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.ws.rs</groupId>
-            <artifactId>jakarta.ws.rs-api</artifactId>
+            <groupId>{{x-helidon-rootJavaEEDepPrefix}}.ws.rs</groupId>
+            <artifactId>{{x-helidon-rootJavaEEDepPrefix}}.ws.rs-api</artifactId>
         </dependency>
 {{#openApiNullable}}
         <dependency>
@@ -57,8 +59,8 @@
             <artifactId>jersey-media-json-binding</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.json.bind</groupId>
-            <artifactId>jakarta.json.bind-api</artifactId>
+            <groupId>{{x-helidon-rootJavaEEDepPrefix}}.json.bind</groupId>
+            <artifactId>{{x-helidon-rootJavaEEDepPrefix}}.json.bind-api</artifactId>
         </dependency>
 {{/jsonb}}
         <dependency>

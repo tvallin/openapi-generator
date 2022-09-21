@@ -78,7 +78,7 @@ public class JavaHelidonMpServerCodegenTest {
         generate(createConfigurator().addAdditionalProperty(SERIALIZATION_LIBRARY, "jsonb"));
 
         JavaFileAssert.assertThat(Paths.get(modelPackage + "/Color.java"))
-                .fileContains("javax.json.bind.annotation.JsonbCreator");
+                .fileContains(".json.bind.annotation.JsonbCreator");
     }
 
     @Test

@@ -50,9 +50,13 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     static final String HELIDON_NIMA_ANNOTATIONS = "nima-annotations";
 
     static final String MICROPROFILE_ROOT_PACKAGE = "rootJavaEEPackage";
+    static final String MICROPROFILE_ROOT_DEP_PREFIX = "x-helidon-rootJavaEEDepPrefix";
     static final String MICROPROFILE_ROOT_PACKAGE_DESC = "Root package name for Java EE";
     static final String MICROPROFILE_ROOT_PACKAGE_JAVAX = "javax";
     static final String MICROPROFILE_ROOT_PACKAGE_JAKARTA = "jakarta";
+    private static final String VALIDATION_ARTIFACT_PREFIX_KEY = "x-helidon-validationArtifactPrefix";
+    private static final String VALIDATION_ARTIFACT_PREFIX_JAVAX = "";
+    private static final String VALIDATION_ARTIFACT_PREFIX_JAKARTA = MICROPROFILE_ROOT_PACKAGE_JAKARTA + ".";
 
     // for generated doc
     static final String MICROPROFILE_ROOT_PACKAGE_DEFAULT =
@@ -62,8 +66,8 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
     static final String SERIALIZATION_LIBRARY_JACKSON = "jackson";
     static final String SERIALIZATION_LIBRARY_JSONB = "jsonb";
 
-    static final String HELIDON_VERSION = "helidonVersion";
-    static final String DEFAULT_HELIDON_VERSION = "3.0.1";
+    public static final String HELIDON_VERSION = "helidonVersion";
+    public static final String DEFAULT_HELIDON_VERSION = "3.0.1";
     static final String HELIDON_VERSION_DESC = "Helidon version for generated code";
 
     static final String FULL_PROJECT = "fullProject";
@@ -73,6 +77,8 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
             "are never overwritten.";
 
     private String helidonVersion;
+    private String rootJavaEEPackage;
+    private String rootJavaEEDepPrefix;
 
     public JavaHelidonCommonCodegen() {
         super();
@@ -115,7 +121,7 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
         }
 
         additionalProperties.put(HELIDON_VERSION, helidonVersion);
-        setRootJavaEEPackage(helidonVersion);
+        setEEPackageAndDependencies(helidonVersion);
     }
 
     /**
@@ -166,19 +172,31 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
        return Paths.get(getOutputTestFolder()).toFile().exists();
     }
 
+    protected String rootJavaEEPackage() {
+        return rootJavaEEPackage;
+    }
+
     private void setHelidonVersion(String version) {
         helidonVersion = version;
         setParentVersion(version);
     }
 
-    private void setRootJavaEEPackage(String version) {
+    private void setEEPackageAndDependencies(String version) {
 
-        String rootEEPackageToUse = checkAndSelectRootEEPackage(version);
-        additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, rootEEPackageToUse);
+        rootJavaEEPackage = checkAndSelectRootEEPackage(version);
+        additionalProperties.put(MICROPROFILE_ROOT_PACKAGE, rootJavaEEPackage);
+
+        rootJavaEEDepPrefix = checkAndSelectRootEEDepPrefix(version);
+        additionalProperties.put(MICROPROFILE_ROOT_DEP_PREFIX, rootJavaEEDepPrefix);
+
+        additionalProperties.put(VALIDATION_ARTIFACT_PREFIX_KEY,
+            rootJavaEEDepPrefix.equals(MICROPROFILE_ROOT_PACKAGE_JAVAX)
+                ? VALIDATION_ARTIFACT_PREFIX_JAVAX
+                : VALIDATION_ARTIFACT_PREFIX_JAKARTA);
     }
 
     private String checkAndSelectRootEEPackage(String version) {
-        String packagePrefixImpliedByVersion = usesJakarta(version)
+        String packagePrefixImpliedByVersion = usesJakartaPackages(version)
             ? MICROPROFILE_ROOT_PACKAGE_JAKARTA
             : MICROPROFILE_ROOT_PACKAGE_JAVAX;
 
@@ -194,14 +212,41 @@ public abstract class JavaHelidonCommonCodegen extends AbstractJavaCodegen
                         userRootEEPackage));
             }
             return userRootEEPackage;
-        } else {
-            // No explicit setting for the root EE package.
-            return packagePrefixImpliedByVersion;
         }
+
+        // No explicit setting for the root EE package.
+        return packagePrefixImpliedByVersion;
     }
 
-    private boolean usesJakarta(String version) {
+    private String checkAndSelectRootEEDepPrefix(String version) {
+        String mavenDepPrefixImpliedByVersion = usesJakartaPrefix(version)
+            ? MICROPROFILE_ROOT_PACKAGE_JAKARTA
+            : MICROPROFILE_ROOT_PACKAGE_JAVAX;
+
+        // Make sure any user-specified prefix is correct for the chosen Helidon version.
+        if (additionalProperties.containsKey(MICROPROFILE_ROOT_DEP_PREFIX)) {
+            String userMavenDepPrefix = additionalProperties.get(MICROPROFILE_ROOT_DEP_PREFIX).toString();
+            if (!mavenDepPrefixImpliedByVersion.equals(userMavenDepPrefix)) {
+                throw new IllegalArgumentException(
+                    String.format(Locale.ROOT,
+                        "Helidon version %s uses the %s prefix for EE dependencies but options specified '%s'",
+                        version,
+                        mavenDepPrefixImpliedByVersion,
+                        userMavenDepPrefix));
+            }
+            return userMavenDepPrefix;
+        }
+
+        // No explicit setting for the dependency prefix.
+        return mavenDepPrefixImpliedByVersion;
+    }
+
+    private boolean usesJakartaPackages(String version) {
         return !version.startsWith("2.") && !version.startsWith("1.");
+    }
+
+    private boolean usesJakartaPrefix(String version) {
+        return !version.startsWith("1.");
     }
 
     protected void removeCliOptions(String... opt) {

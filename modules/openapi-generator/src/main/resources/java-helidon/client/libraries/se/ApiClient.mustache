@@ -1,8 +1,8 @@
 {{>licenseInfo}}
 package {{invokerPackage}};
 
-{{#jsonb}}import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbConfig;
+{{#jsonb}}import {{rootJavaEEPackage}}.json.bind.JsonbBuilder;
+import {{rootJavaEEPackage}}.json.bind.JsonbConfig;
 {{/jsonb}}
 {{#jackson}}import com.fasterxml.jackson.databind.ObjectMapper;
 {{/jackson}}

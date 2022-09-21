@@ -19,15 +19,13 @@
 
     <properties>
         <mainClass>{{{invokerPackage}}}.Main</mainClass>
-        <version.validation.api>2.0.1.Final</version.validation.api>
         <version.jackson.databind.nullable>0.2.3</version.jackson.databind.nullable>
     </properties>
 
     <dependencies>
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <version>${version.validation.api}</version>
+            <groupId>{{x-helidon-rootJavaEEDepPrefix}}.validation</groupId>
+            <artifactId>{{x-helidon-validationArtifactPrefix}}validation-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.helidon.webserver</groupId>
