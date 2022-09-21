@@ -37,6 +37,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import org.openapitools.codegen.CodegenConfig;
 import org.openapitools.codegen.DefaultGenerator;
 import org.openapitools.codegen.config.CodegenConfigurator;
 import org.testng.SkipException;
@@ -97,6 +98,7 @@ abstract class FunctionalBase {
     }
 
     protected void generate(CodegenConfigurator config) {
+        enforceJavaVersion(config);
         DefaultGenerator generator = new DefaultGenerator();
         generator.opts(config.toClientOptInput());
         generator.generate();
@@ -190,8 +192,6 @@ abstract class FunctionalBase {
             }
             try {
                 assumeTrue( "Maven not found, test is skipped", maven != null);
-                assumeTrue( "Wrong java version, test is skipped",
-                        System.getProperty("java.home", "unknown").contains("11"));
                 maven = maven.toRealPath();
                 Path shimmed = maven.getParent().getParent().resolve(MAVEN_SHIM_TARGET);
                 if (Files.exists(shimmed)) {
@@ -203,6 +203,33 @@ abstract class FunctionalBase {
             }
         }
         return mvn.toString();
+    }
+
+    private void enforceJavaVersion(CodegenConfigurator config) {
+        int currentJavaVersion = getCurrentJavaMajorVersion();
+        int requiredJavaVersion = getRequiredJavaVersion(config);
+        String errorJavaVersion = String.format(Locale.ROOT, "Java version must be %s, test is skipped", requiredJavaVersion);
+        assumeTrue(errorJavaVersion, currentJavaVersion == requiredJavaVersion);
+    }
+
+    private int getRequiredJavaVersion(CodegenConfigurator config) {
+        CodegenConfig configuration = config.toClientOptInput().getConfig();
+        configuration.processOpts();
+        return configuration
+                .additionalProperties()
+                .get("helidonVersion")
+                .toString()
+                .startsWith("3.") ? 17 : 11;
+    }
+
+    private int getCurrentJavaMajorVersion() {
+        String[] versionElements = System.getProperty("java.version").split("\\.");
+        int firstElement = Integer.parseInt(versionElements[0]);
+        if (firstElement == 1) {
+            return Integer.parseInt(versionElements[1]);
+        } else {
+            return firstElement;
+        }
     }
 
     /**
