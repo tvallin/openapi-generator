@@ -321,7 +321,7 @@ abstract class FunctionalBase {
      * @param jarPath path to expected jar file
      */
     protected void buildAndVerify(String jarPath) {
-        ProcessReader reader = runMavenProcessAndWait("package");
+        ProcessReader reader = runMavenProcessAndWait("package", "--quiet");
         Path executableJar = outputPath.resolve(jarPath);
         String output = reader.readOutputConsole();
         assertThat(output, containsString("BUILD SUCCESS"));
