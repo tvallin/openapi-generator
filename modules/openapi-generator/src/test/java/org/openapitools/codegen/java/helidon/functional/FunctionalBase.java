@@ -321,13 +321,10 @@ abstract class FunctionalBase {
      * @param jarPath path to expected jar file
      */
     protected void buildAndVerify(String jarPath) {
-        ProcessReader reader = runMavenProcessAndWait("package", "--quiet");
+        ProcessReader reader = runMavenProcessAndWait("package", "-Dorg.slf4j.simpleLogger.defaultLogLevel=error");
         Path executableJar = outputPath.resolve(jarPath);
-        String output = reader.readOutputConsole();
-        assertThat(output, containsString("BUILD SUCCESS"));
-        assertThat(output, containsString("Errors: 0"));
-        assertThat(output, containsString("Failures: 0"));
-        assertThat(output, containsString("Skipped: 0"));
+        assertThat(reader.readOutputConsole().isEmpty(), is(true));
+        assertThat(reader.readErrorConsole().isEmpty(), is(true));
         assertThat(Files.exists(executableJar), is(true));
     }
 
@@ -338,14 +335,20 @@ abstract class FunctionalBase {
 
         private final Process process;
         private final BufferedReader consoleReader;
+        private final BufferedReader errorReader;
 
         ProcessReader(Process process) {
             this.process = process;
             this.consoleReader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
+            this.errorReader = new BufferedReader(new InputStreamReader(process.getErrorStream(), StandardCharsets.UTF_8));
         }
 
         public String readOutputConsole() {
             return consoleReader.lines().collect(Collectors.joining("\n"));
+        }
+
+        public String readErrorConsole() {
+            return errorReader.lines().collect(Collectors.joining("\n"));
         }
 
         @SuppressWarnings("UnusedReturnValue")
