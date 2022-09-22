@@ -1,14 +1,6 @@
 name: OpenAPI Generator
 
-on:
-  push:
-    branches:
-      - helidon-generators
-      - '[5-9]+.[0-9]+.x'
-  pull_request:
-    branches:
-      - helidon-generators
-      - '[5-9]+.[0-9]+.x'
+on: [workflow_dispatch]
 
 jobs:
   build:
