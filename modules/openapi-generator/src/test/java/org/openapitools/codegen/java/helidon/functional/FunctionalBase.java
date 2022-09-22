@@ -323,8 +323,8 @@ abstract class FunctionalBase {
     protected void buildAndVerify(String jarPath) {
         ProcessReader reader = runMavenProcessAndWait("package", "-Dorg.slf4j.simpleLogger.defaultLogLevel=error");
         Path executableJar = outputPath.resolve(jarPath);
-        assertThat(reader.readOutputConsole().isEmpty(), is(true));
-        assertThat(reader.readErrorConsole().isEmpty(), is(true));
+        assertThat(reader.readOutputConsole(), reader.readOutputConsole().isEmpty(), is(true));
+        assertThat(reader.readErrorConsole(), reader.readErrorConsole().isEmpty(), is(true));
         assertThat(Files.exists(executableJar), is(true));
     }
 
